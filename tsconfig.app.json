@@ -5,6 +5,11 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "react-router-dom": ["src/lib/router.tsx"]
+    },
     "allowImportingTsExtensions": false,
     "resolveJsonModule": true,
     "isolatedModules": true,
