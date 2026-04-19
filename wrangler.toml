@@ -1,0 +1,11 @@
+name = "photography"
+compatibility_date = "2026-04-19"
+main = "worker/index.ts"
+
+[build]
+command = "npm run build"
+cwd = "."
+watch_dir = "src"
+
+[assets]
+directory = "./dist"
