@@ -12,6 +12,7 @@ import type { Photo } from './types'
 
 export default function App() {
   const [activePhoto, setActivePhoto] = useState<Photo | null>(null)
+  const [scrolled, setScrolled] = useState(false)
   const { siteContent, hydrated, saveContent, resetContent } = useSiteContent()
 
   useEffect(() => {
@@ -20,19 +21,32 @@ export default function App() {
     return () => window.removeEventListener('contextmenu', preventContext)
   }, [])
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
     <SiteContentContext.Provider value={{ siteContent, hydrated, saveContent, resetContent }}>
       <div className="bg-carbon text-white">
-        <header className="fixed inset-x-0 top-0 z-50 bg-white/[0.02] backdrop-blur-xl">
+        <header
+          className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+            scrolled ? 'bg-black/55 backdrop-blur-xl' : 'bg-transparent'
+          }`}
+        >
           <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 md:px-8 lg:px-12">
-            <a
-              href="#home"
-              className="font-display text-base tracking-[0.45em] text-white transition hover:text-white/70"
-            >
-              SHAWN
+            <a href="#home" aria-label="Shawn Photography 首页" className="shrink-0">
+              <img
+                src="/logo.png"
+                alt="Shawn Photography Logo"
+                loading="lazy"
+                className="h-9 w-auto object-contain md:h-10"
+              />
             </a>
             <nav>
-              <ul className="flex items-center gap-5 text-[11px] uppercase tracking-[0.35em] text-white/65 md:gap-8">
+              <ul className="flex flex-wrap items-center justify-center gap-3 text-xs uppercase text-zinc-200 md:gap-4">
                 <li><a href="#portfolio" className="transition hover:text-white">Portfolio</a></li>
                 <li><a href="#about" className="transition hover:text-white">About Me</a></li>
                 <li><a href="#blog" className="transition hover:text-white">Blog</a></li>
