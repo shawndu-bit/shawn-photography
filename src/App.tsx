@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import Footer from './components/Footer'
 import Lightbox from './components/Lightbox'
-import { SiteContentContext } from './context/SiteContentContext'
-import { useSiteContent } from './hooks/useSiteContent'
+import { useSiteContentContext } from './hooks/useSiteContentContext'
 import AboutSection from './sections/AboutSection'
 import BlogSection from './sections/BlogSection'
 import ContactSection from './sections/ContactSection'
@@ -13,7 +12,7 @@ import type { Photo } from './types'
 export default function App() {
   const [activePhoto, setActivePhoto] = useState<Photo | null>(null)
   const [scrolled, setScrolled] = useState(false)
-  const { siteContent, hydrated, saveContent, resetContent } = useSiteContent()
+  const { siteContent } = useSiteContentContext()
 
   useEffect(() => {
     const preventContext = (event: MouseEvent) => event.preventDefault()
@@ -29,8 +28,7 @@ export default function App() {
   }, [])
 
   return (
-    <SiteContentContext.Provider value={{ siteContent, hydrated, saveContent, resetContent }}>
-      <div className="bg-carbon text-white">
+    <div className="bg-carbon text-white">
         <header
           className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
             scrolled ? 'bg-black/55 backdrop-blur-xl' : 'bg-transparent'
@@ -74,7 +72,6 @@ export default function App() {
             onClose={() => setActivePhoto(null)}
           />
         )}
-      </div>
-    </SiteContentContext.Provider>
+    </div>
   )
 }

@@ -7,7 +7,8 @@
     "moduleResolution": "Bundler",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "react-router-dom": ["src/lib/router.tsx"]
     },
     "allowImportingTsExtensions": false,
     "resolveJsonModule": true,
