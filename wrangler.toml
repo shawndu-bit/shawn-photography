@@ -3,7 +3,7 @@ compatibility_date = "2026-04-19"
 main = "worker/index.ts"
 
 [build]
-command = "npm run build"
+command = "npm run build && rm -f dist/_redirects"
 cwd = "."
 watch_dir = "src"
 
