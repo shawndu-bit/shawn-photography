@@ -1,6 +1,5 @@
 name = "photography"
 compatibility_date = "2026-04-19"
-main = "worker/index.ts"
 
 [build]
 command = "npm run build && rm -f dist/_redirects"
@@ -9,3 +8,4 @@ watch_dir = "src"
 
 [assets]
 directory = "./dist"
+not_found_handling = "single-page-application"
