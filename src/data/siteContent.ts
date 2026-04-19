@@ -24,6 +24,10 @@ export const defaultSiteContent: SiteContent = {
     title: '开放商业合作、品牌拍摄、作品授权与定制印刷。',
     email: 'hello@example.com',
   },
+  blog: {
+    eyebrow: 'Journal',
+    title: '摄影日志与野外采风笔记',
+  },
   blogPosts: [
     {
       id: '1',

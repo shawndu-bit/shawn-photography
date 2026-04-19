@@ -48,6 +48,11 @@ export interface ContactContent {
   email: string
 }
 
+export interface BlogContent {
+  eyebrow: string
+  title: string
+}
+
 export interface BlogPost {
   id: string
   category: string
@@ -66,6 +71,7 @@ export interface SiteContent {
   hero: HeroContent
   about: AboutContent
   contact: ContactContent
+  blog: BlogContent
   blogPosts: BlogPost[]
   photos: Photo[]
   sectionVisibility: SiteSectionVisibility
