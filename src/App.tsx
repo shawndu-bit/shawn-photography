@@ -39,14 +39,14 @@ export default function App() {
           <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 md:px-8 lg:px-12">
             <a href="#home" aria-label="Shawn Photography 首页" className="shrink-0">
               <img
-                src="/logo.png"
+                src="/logo.svg"
                 alt="Shawn Photography Logo"
                 loading="lazy"
-                className="h-9 w-auto object-contain md:h-10"
+                className="h-10 w-auto object-contain md:h-12"
               />
             </a>
             <nav>
-              <ul className="flex flex-wrap items-center justify-center gap-3 text-xs uppercase text-zinc-200 md:gap-4">
+              <ul className="flex flex-wrap items-center justify-center gap-4 text-sm font-medium uppercase tracking-[0.18em] text-zinc-100 md:gap-6 md:text-base">
                 <li><a href="#portfolio" className="transition hover:text-white">Portfolio</a></li>
                 <li><a href="#about" className="transition hover:text-white">About Me</a></li>
                 <li><a href="#blog" className="transition hover:text-white">Blog</a></li>

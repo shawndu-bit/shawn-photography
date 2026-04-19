@@ -7,7 +7,7 @@ npm install
 npm run dev
 ```
 
-> Logo 文件请放在 `public/logo.png`（已在页面头部引用）。
+> Logo 文件请放在 `public/logo.svg`（已在页面头部引用，仓库已提供占位文件 `public/logo.svg`，可直接替换）。
 
 ## 构建
 
