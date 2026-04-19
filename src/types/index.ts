@@ -22,9 +22,11 @@ export interface NavItem {
 }
 
 export interface SocialLink {
+  id: string
   label: string
   href: string
-  icon: string
+  platform: string
+  enabled: boolean
 }
 
 export interface HeroContent {
@@ -72,6 +74,7 @@ export interface SiteContent {
   about: AboutContent
   contact: ContactContent
   blog: BlogContent
+  socialLinks: SocialLink[]
   blogPosts: BlogPost[]
   photos: Photo[]
   sectionVisibility: SiteSectionVisibility

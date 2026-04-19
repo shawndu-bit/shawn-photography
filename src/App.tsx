@@ -45,6 +45,7 @@ export default function App() {
             </a>
             <nav>
               <ul className="flex flex-wrap items-center justify-center gap-4 text-sm font-medium uppercase tracking-[0.18em] text-zinc-100 md:gap-6 md:text-base">
+                <li><a href="#home" className="transition hover:text-white">Home</a></li>
                 <li><a href="#portfolio" className="transition hover:text-white">Portfolio</a></li>
                 <li><a href="#about" className="transition hover:text-white">About Me</a></li>
                 <li><a href="#blog" className="transition hover:text-white">Blog</a></li>

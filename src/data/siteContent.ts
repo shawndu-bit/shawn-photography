@@ -28,6 +28,16 @@ export const defaultSiteContent: SiteContent = {
     eyebrow: 'Journal',
     title: '摄影日志与野外采风笔记',
   },
+  socialLinks: [
+    { id: 'instagram', label: 'Instagram', platform: 'instagram', href: '#', enabled: true },
+    { id: 'facebook', label: 'Facebook', platform: 'facebook', href: '#', enabled: true },
+    { id: 'youtube', label: 'YouTube', platform: 'youtube', href: '#', enabled: true },
+    { id: 'bilibili', label: 'Bilibili', platform: 'bilibili', href: '#', enabled: true },
+    { id: 'xiaohongshu', label: '小红书', platform: 'xiaohongshu', href: '#', enabled: true },
+    { id: 'behance', label: 'Behance', platform: 'behance', href: '#', enabled: true },
+    { id: '500px', label: '500px', platform: '500px', href: '#', enabled: true },
+    { id: 'email', label: 'Email', platform: 'email', href: 'mailto:hello@example.com', enabled: true },
+  ],
   blogPosts: [
     {
       id: '1',
