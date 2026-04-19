@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
 const NAV_LINKS = [
+  { to: '/#home',    label: 'Home' },
   { to: '/#work',    label: 'Portfolio' },
   { to: '/about',    label: 'About Me' },
   { to: '/#blog',    label: 'Blog' },

@@ -28,6 +28,11 @@ function readSiteContent(): SiteContent {
         ...defaultSiteContent.contact,
         ...parsed.contact,
       },
+      blog: {
+        ...defaultSiteContent.blog,
+        ...parsed.blog,
+      },
+      socialLinks: parsed.socialLinks ?? defaultSiteContent.socialLinks,
       blogPosts: parsed.blogPosts ?? defaultSiteContent.blogPosts,
       photos: parsed.photos ?? defaultSiteContent.photos,
       sectionVisibility: {
