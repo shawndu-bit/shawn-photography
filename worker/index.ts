@@ -12,19 +12,27 @@ function shouldServeSpaShell(request: Request) {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const wantsSpaShell = shouldServeSpaShell(request)
+
     try {
       const assetRes = await env.ASSETS.fetch(request)
-      if (assetRes.status !== 404 || !shouldServeSpaShell(request)) {
+      if (assetRes.status !== 404 || !wantsSpaShell) {
         return assetRes
       }
-    } catch {
-      if (!shouldServeSpaShell(request)) throw new Error('Asset fetch failed')
+    } catch (error) {
+      if (!wantsSpaShell) {
+        return new Response(`Asset fetch failed: ${String(error)}`, { status: 500 })
+      }
     }
 
     const spaUrl = new URL(request.url)
     spaUrl.pathname = '/index.html'
     spaUrl.search = ''
 
-    return env.ASSETS.fetch(new Request(spaUrl.toString(), request))
+    try {
+      return await env.ASSETS.fetch(new Request(spaUrl.toString(), request))
+    } catch (error) {
+      return new Response(`SPA shell fetch failed: ${String(error)}`, { status: 500 })
+    }
   }
 };
