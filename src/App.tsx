@@ -39,7 +39,7 @@ export default function App() {
           <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 md:px-8 lg:px-12">
             <a href="#home" aria-label="Shawn Photography 首页" className="shrink-0">
               <img
-                src="/logo.svg"
+                src="/logo.png"
                 alt="Shawn Photography Logo"
                 loading="lazy"
                 className="h-10 w-auto object-contain md:h-12"
