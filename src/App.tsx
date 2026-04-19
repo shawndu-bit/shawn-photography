@@ -23,7 +23,7 @@ export default function App() {
   return (
     <SiteContentContext.Provider value={{ siteContent, hydrated, saveContent, resetContent }}>
       <div className="bg-carbon text-white">
-        <header className="fixed inset-x-0 top-0 z-50 border-b border-white/8 bg-carbon/40 backdrop-blur-xl">
+        <header className="fixed inset-x-0 top-0 z-50 bg-white/[0.02] backdrop-blur-xl">
           <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 md:px-8 lg:px-12">
             <a
               href="#home"
