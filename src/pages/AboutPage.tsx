@@ -20,7 +20,7 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_30%,rgba(255,255,255,0.04)_0%,transparent_70%)]" />
 
           <div className="relative mx-auto w-full max-w-[1200px] px-6 pb-16 pt-32 lg:px-12">
-            <p className="mb-3 text-[10px] uppercase tracking-[0.55em] text-white/30">
+            <p className="mb-3 text-xs uppercase tracking-[0.55em] text-white/30">
               {about.eyebrow}
             </p>
             <h1 className="font-display text-5xl leading-none tracking-tight text-white sm:text-6xl lg:text-7xl">
@@ -39,7 +39,7 @@ export default function AboutPage() {
                 <nav className="mt-8 flex flex-col gap-4">
                   <a
                     href="#story"
-                    className="text-[11px] uppercase tracking-[0.35em] text-white/35 transition hover:text-white/70"
+                    className="text-sm uppercase tracking-[0.35em] text-white/35 transition hover:text-white/70"
                     onClick={(e) => {
                       e.preventDefault()
                       document.getElementById('story')?.scrollIntoView({ behavior: 'smooth' })
@@ -49,7 +49,7 @@ export default function AboutPage() {
                   </a>
                   <a
                     href="#approach"
-                    className="text-[11px] uppercase tracking-[0.35em] text-white/35 transition hover:text-white/70"
+                    className="text-sm uppercase tracking-[0.35em] text-white/35 transition hover:text-white/70"
                     onClick={(e) => {
                       e.preventDefault()
                       document.getElementById('approach')?.scrollIntoView({ behavior: 'smooth' })
@@ -59,7 +59,7 @@ export default function AboutPage() {
                   </a>
                   <Link
                     to="/#contact"
-                    className="text-[11px] uppercase tracking-[0.35em] text-white/35 transition hover:text-white/70"
+                    className="text-sm uppercase tracking-[0.35em] text-white/35 transition hover:text-white/70"
                   >
                     Contact
                   </Link>
@@ -89,7 +89,7 @@ export default function AboutPage() {
 
               {/* Approach block */}
               <div id="approach">
-                <p className="mb-4 text-[10px] uppercase tracking-[0.5em] text-white/30">Approach</p>
+                <p className="mb-4 text-xs uppercase tracking-[0.5em] text-white/30">Approach</p>
                 <p className="max-w-prose text-base leading-relaxed text-white/55">
                   Every image begins long before the shutter fires — in the stillness of waiting,
                   in the study of light across a landscape, in the patience to let a scene reveal
@@ -101,7 +101,7 @@ export default function AboutPage() {
               <div className="mt-16">
                 <Link
                   to="/#contact"
-                  className="inline-flex items-center gap-3 rounded-full border border-white/20 px-7 py-3.5 text-[11px] uppercase tracking-[0.35em] text-white/70 transition hover:border-white/40 hover:text-white"
+                  className="inline-flex items-center gap-3 rounded-full border border-white/20 px-7 py-3.5 text-sm uppercase tracking-[0.35em] text-white/70 transition hover:border-white/40 hover:text-white"
                 >
                   Get in Touch
                   <span className="text-white/40">→</span>
@@ -115,10 +115,10 @@ export default function AboutPage() {
         <section className="border-t border-white/8 py-16 lg:py-24">
           <div className="mx-auto max-w-[1200px] px-6 lg:px-12">
             <div className="flex items-end justify-between">
-              <p className="text-[10px] uppercase tracking-[0.5em] text-white/30">Selected Work</p>
+              <p className="text-xs uppercase tracking-[0.5em] text-white/30">Selected Work</p>
               <Link
                 to="/#work"
-                className="text-[11px] uppercase tracking-[0.35em] text-white/40 transition hover:text-white"
+                className="text-sm uppercase tracking-[0.35em] text-white/40 transition hover:text-white"
               >
                 View All →
               </Link>
