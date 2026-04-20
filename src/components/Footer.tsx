@@ -10,6 +10,9 @@ import type { ComponentType } from 'react'
 import type { SocialLink } from '@/types'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 
+const PUBLIC_SOCIAL_ORDER = ['instagram', 'tiktok', 'facebook', 'youtube', 'email'] as const
+const PUBLIC_SOCIAL_SET = new Set<string>(PUBLIC_SOCIAL_ORDER)
+
 const iconByPlatform: Record<string, ComponentType<{ className?: string }>> = {
   instagram: Instagram,
   tiktok: TikTokIcon,
