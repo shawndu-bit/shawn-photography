@@ -19,8 +19,8 @@ export default function HeroEditPage() {
     setSaved(false)
   }
 
-  function handleSave() {
-    saveContent({ ...siteContent, hero: form })
+  async function handleSave() {
+    await saveContent({ ...siteContent, hero: form })
     setDirty(false)
     setSaved(true)
   }

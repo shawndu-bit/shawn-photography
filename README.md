@@ -36,6 +36,34 @@ npx wrangler deploy
 `wrangler.toml` 已配置 `[assets] directory = "./dist"`，用于 `wrangler deploy` 直接发布静态产物。
 仓库还提供了 `worker/index.ts` 作为最小 Worker 入口（仅转发到 `ASSETS`），避免 Wrangler 在自动推断入口时引用到非预期脚本。
 
+## Neon Postgres 内容持久化
+
+- 站点内容读取接口：`GET /api/site-content`
+- 管理后台保存接口：`PUT /api/admin/site-content`
+- Worker 运行时使用环境变量 `DATABASE_URL`。
+- 迁移/导入建议使用 `DATABASE_URL_UNPOOLED` 在 Neon SQL Editor（或你自己的 psql）中执行。
+
+### 初始化数据库 schema
+
+在 Neon SQL Editor 连接到 `DATABASE_URL_UNPOOLED` 对应的数据库后，执行：
+
+- `db/migrations/0001_site_content.sql`
+
+### 导入现有 localStorage 数据（推荐唯一方案）
+
+**请用：SQL for Neon SQL Editor**（最简单、最安全、一次性可重复执行）。
+
+执行步骤：
+
+1. 打开 Neon Console → SQL Editor，连接到 `DATABASE_URL_UNPOOLED` 对应数据库。
+2. 先执行 `db/migrations/0001_site_content.sql`（仅需一次）。
+3. 再执行 `db/import_initial_site_content.sql`（可重复执行；会覆盖 `site_content` 单例并重建 `site_photos` 顺序数据）。
+4. 验证：
+   - `SELECT id, updated_at FROM site_content;`
+   - `SELECT id, title, position FROM site_photos ORDER BY position;`
+
+> 项目已保留前端 localStorage 兜底读取逻辑（只作迁移过渡用），Neon 是主数据源。
+
 ## R2 图片上传（管理后台）
 
 - 后台「图片管理」支持直接选择 JPG/JPEG/PNG/WebP 文件并上传到 R2。

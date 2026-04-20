@@ -1,3 +1,7 @@
-# Copy this file to .dev.vars and fill in your Neon connection string
-# .dev.vars is loaded automatically by `wrangler dev` (never commit it)
-DATABASE_URL=postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+# Copy this file to .dev.vars and fill in your Neon connection strings.
+# .dev.vars is loaded automatically by `wrangler dev` (never commit it).
+#
+# Runtime reads use DATABASE_URL.
+# Migration/import SQL should be executed against DATABASE_URL_UNPOOLED.
+DATABASE_URL=postgresql://user:pass@ep-xxx-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require
+DATABASE_URL_UNPOOLED=postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
