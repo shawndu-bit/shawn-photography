@@ -17,6 +17,18 @@ export interface Env {
       | null
     >
   }
+  IMAGES?: ImagesBinding
+}
+
+interface ImagesPipeline {
+  transform(options: Record<string, unknown>): ImagesPipeline
+  output(options: { format: string; quality?: number }): {
+    response(): Promise<Response>
+  }
+}
+
+interface ImagesBinding {
+  input(stream: ReadableStream): ImagesPipeline
 }
 
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -34,7 +46,15 @@ function sanitizeName(name: string) {
 }
 
 function buildImageKey(fileName: string) {
-  return `photos/${Date.now()}-${sanitizeName(fileName || 'image')}`
+  return `${Date.now()}-${sanitizeName(fileName || 'image')}`
+}
+
+function buildOriginalKey(fileName: string) {
+  return `uploads/original/${buildImageKey(fileName)}`
+}
+
+function buildThumbnailKey(fileName: string) {
+  return `uploads/thumb/${buildImageKey(fileName)}.webp`
 }
 
 function shouldServeSpaShell(request: Request) {
@@ -67,10 +87,12 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/api/admin/upload-image') {
       if (!env.BUCKET) return Response.json({ ok: false, error: 'R2 bucket not configured' }, { status: 500 })
+      if (!env.IMAGES) return Response.json({ ok: false, error: 'Images binding not configured' }, { status: 500 })
 
       const formData = await request.formData()
       const file = formData.get('file')
-      const existingKey = String(formData.get('existingKey') || '').trim()
+      const existingOriginalKey = String(formData.get('existingOriginalKey') || '').trim()
+      const existingThumbKey = String(formData.get('existingThumbKey') || '').trim()
 
       if (!(file instanceof File)) {
         return Response.json({ ok: false, error: 'Missing file' }, { status: 400 })
@@ -79,16 +101,43 @@ export default {
         return Response.json({ ok: false, error: 'Unsupported file type' }, { status: 400 })
       }
 
-      const key = existingKey || buildImageKey(file.name)
+      const reusableOriginalKey = existingOriginalKey.startsWith('uploads/original/')
+        ? existingOriginalKey
+        : ''
+      const reusableThumbKey = existingThumbKey.startsWith('uploads/thumb/')
+        ? existingThumbKey
+        : ''
 
-      await env.BUCKET.put(key, file, {
+      const originalKey = reusableOriginalKey || buildOriginalKey(file.name)
+      const thumbnailKey = reusableThumbKey || buildThumbnailKey(file.name)
+
+      await env.BUCKET.put(originalKey, file, {
         httpMetadata: { contentType: file.type || 'application/octet-stream' },
+      })
+
+      const transformed = await env.IMAGES
+        .input(file.stream())
+        .transform({ width: 640, height: 640, fit: 'scale-down' })
+        .output({ format: 'image/webp', quality: 82 })
+        .response()
+
+      if (!transformed.ok) {
+        return Response.json({ ok: false, error: 'Thumbnail generation failed' }, { status: 500 })
+      }
+
+      const thumbContentType = transformed.headers.get('content-type') ?? 'image/webp'
+      const thumbBody = transformed.body ?? await transformed.arrayBuffer()
+
+      await env.BUCKET.put(thumbnailKey, thumbBody, {
+        httpMetadata: { contentType: thumbContentType },
       })
 
       return Response.json({
         ok: true,
-        key,
-        url: `/uploads/${encodeURIComponent(key)}`,
+        originalKey,
+        originalUrl: `/uploads/${encodeURIComponent(originalKey)}`,
+        thumbnailKey,
+        thumbnailUrl: `/uploads/${encodeURIComponent(thumbnailKey)}`,
       })
     }
 
