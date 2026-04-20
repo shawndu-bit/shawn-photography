@@ -10,8 +10,12 @@ import type { ComponentType } from 'react'
 import type { SocialLink } from '@/types'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 
+const PUBLIC_SOCIAL_ORDER = ['instagram', 'tiktok', 'facebook', 'youtube', 'email'] as const
+const PUBLIC_SOCIAL_SET = new Set<string>(PUBLIC_SOCIAL_ORDER)
+
 const iconByPlatform: Record<string, ComponentType<{ className?: string }>> = {
   instagram: Instagram,
+  tiktok: TikTokIcon,
   facebook: Facebook,
   youtube: Youtube,
   bilibili: BilibiliIcon,
@@ -37,6 +41,24 @@ function XiaohongshuIcon({ className }: { className?: string }) {
       <path d="M7.2 9.2h2.5L8.5 14" />
       <path d="M12.1 9.2h2.6l-2.1 4.8h3.2" />
       <path d="M15.5 16h1.3" />
+    </svg>
+  )
+}
+
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M13.2 5v8.7a4.1 4.1 0 1 1-3-3.9" />
+      <path d="M13.2 6.2c.9 1.3 2 2.2 3.8 2.4V12c-1.6 0-2.9-.4-3.8-1.2" />
     </svg>
   )
 }
@@ -108,12 +130,18 @@ function getIcon(link: SocialLink) {
 
 export default function Footer() {
   const { siteContent } = useSiteContentContext()
-  const links = siteContent.socialLinks.filter((link) => link.enabled)
+  const links = siteContent.socialLinks
+    .filter((link) => link.enabled && PUBLIC_SOCIAL_SET.has(link.platform.trim().toLowerCase()))
+    .sort(
+      (a, b) =>
+        PUBLIC_SOCIAL_ORDER.indexOf(a.platform.trim().toLowerCase() as (typeof PUBLIC_SOCIAL_ORDER)[number]) -
+        PUBLIC_SOCIAL_ORDER.indexOf(b.platform.trim().toLowerCase() as (typeof PUBLIC_SOCIAL_ORDER)[number]),
+    )
 
   return (
     <footer className="border-t border-white/10 px-5 py-10 md:px-8 lg:px-12">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-4">
           {links.map((link) => {
             const Icon = getIcon(link)
             const isMail = link.href.startsWith('mailto:')
@@ -126,9 +154,9 @@ export default function Footer() {
                 title={link.label}
                 target={isMail ? undefined : '_blank'}
                 rel={isMail ? undefined : 'noopener noreferrer'}
-                className="group relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/12 text-white/55 transition hover:border-white/25 hover:text-white"
+                className="group relative inline-flex h-11 w-11 items-center justify-center text-white/60 transition hover:text-white"
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-8 w-8" />
                 <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-black/70 px-2.5 py-1 text-[10px] uppercase tracking-[0.22em] text-white/70 opacity-0 transition group-hover:opacity-100">
                   {link.label}
                 </span>

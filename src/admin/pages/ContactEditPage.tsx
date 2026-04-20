@@ -4,6 +4,7 @@ import Field from '@/admin/components/ui/Field'
 import SaveBar from '@/admin/components/ui/SaveBar'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import type { ContactContent, SocialLink } from '@/types'
+import { defaultSiteContent } from '@/data/siteContent'
 
 function newSocialLink(): SocialLink {
   return {
@@ -61,6 +62,12 @@ export default function ContactEditPage() {
     setDirty(false)
   }
 
+  function applyRecommendedLinks() {
+    setLinks(defaultSiteContent.socialLinks)
+    setDirty(true)
+    setSaved(false)
+  }
+
   return (
     <AdminLayout>
       <div className="px-8 py-10">
@@ -91,12 +98,20 @@ export default function ContactEditPage() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-6">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">社交图标链接</p>
-              <button
-                onClick={addLink}
-                className="rounded-full border border-white/10 px-4 py-1.5 text-[11px] tracking-wide text-white/50 transition hover:border-white/20 hover:text-white/80"
-              >
-                + 新增链接
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={applyRecommendedLinks}
+                  className="rounded-full border border-white/10 px-4 py-1.5 text-[11px] tracking-wide text-white/50 transition hover:border-white/20 hover:text-white/80"
+                >
+                  使用推荐平台
+                </button>
+                <button
+                  onClick={addLink}
+                  className="rounded-full border border-white/10 px-4 py-1.5 text-[11px] tracking-wide text-white/50 transition hover:border-white/20 hover:text-white/80"
+                >
+                  + 新增链接
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -123,7 +138,7 @@ export default function ContactEditPage() {
                       label="图标平台标识（platform）"
                       value={link.platform}
                       onChange={(e) => updateLink(link.id, 'platform', e.target.value)}
-                      placeholder="instagram / facebook / bilibili / email"
+                      placeholder="instagram / tiktok / facebook / youtube / email"
                     />
                     <Field
                       label="URL / 超链接"
