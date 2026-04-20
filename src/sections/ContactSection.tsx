@@ -8,7 +8,7 @@ export default function ContactSection() {
     <section id="contact" className="border-t border-white/10 px-5 py-24 md:px-8 lg:px-12">
       <div className="mx-auto flex max-w-7xl flex-col gap-12 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl">
-          <p className="mb-5 text-[11px] uppercase tracking-[0.5em] text-white/40">{c.eyebrow}</p>
+          <p className="mb-5 text-sm uppercase tracking-[0.5em] text-white/40">{c.eyebrow}</p>
           <h2 className="font-display text-4xl leading-tight text-white md:text-5xl">{c.title}</h2>
         </div>
         <a

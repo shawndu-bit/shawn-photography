@@ -3,7 +3,7 @@ import AdminLayout from '@/admin/components/AdminLayout'
 import Field from '@/admin/components/ui/Field'
 import SaveBar from '@/admin/components/ui/SaveBar'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
-import type { BlogPost } from '@/types'
+import type { BlogContent, BlogPost } from '@/types'
 
 function newPost(): BlogPost {
   return { id: Date.now().toString(), category: '', title: '', excerpt: '' }
@@ -11,11 +11,19 @@ function newPost(): BlogPost {
 
 export default function BlogEditPage() {
   const { siteContent, saveContent } = useSiteContentContext()
+  const [blog, setBlog] = useState<BlogContent>(siteContent.blog)
   const [posts, setPosts] = useState<BlogPost[]>(siteContent.blogPosts)
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  useEffect(() => { setBlog(siteContent.blog) }, [siteContent.blog])
   useEffect(() => { setPosts(siteContent.blogPosts) }, [siteContent.blogPosts])
+
+  function setBlogField<K extends keyof BlogContent>(key: K, val: BlogContent[K]) {
+    setBlog((prev) => ({ ...prev, [key]: val }))
+    setDirty(true)
+    setSaved(false)
+  }
 
   function updatePost(id: string, key: keyof BlogPost, val: string) {
     setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, [key]: val } : p)))
@@ -35,12 +43,13 @@ export default function BlogEditPage() {
   }
 
   function handleSave() {
-    saveContent({ ...siteContent, blogPosts: posts })
+    saveContent({ ...siteContent, blog, blogPosts: posts })
     setDirty(false)
     setSaved(true)
   }
 
   function handleReset() {
+    setBlog(siteContent.blog)
     setPosts(siteContent.blogPosts)
     setDirty(false)
   }
@@ -62,6 +71,22 @@ export default function BlogEditPage() {
         </div>
 
         <div className="max-w-2xl space-y-6">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-6">
+            <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-white/40">版块标题</p>
+            <div className="space-y-4">
+              <Field
+                label="眉题（Eyebrow）"
+                value={blog.eyebrow}
+                onChange={(e) => setBlogField('eyebrow', e.target.value)}
+              />
+              <Field
+                label="主页 Blog 主标题"
+                value={blog.title}
+                onChange={(e) => setBlogField('title', e.target.value)}
+              />
+            </div>
+          </div>
+
           {posts.map((post, idx) => (
             <div
               key={post.id}
