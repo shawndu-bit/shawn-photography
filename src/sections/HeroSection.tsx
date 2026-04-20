@@ -1,19 +1,24 @@
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 
 export default function HeroSection() {
-  const { siteContent } = useSiteContentContext()
+  const { siteContent, hydrated } = useSiteContentContext()
   const h = siteContent.hero
+  const showHeroImage = hydrated && Boolean(h.imageSrc)
 
   return (
     <section id="home" className="relative min-h-screen overflow-hidden">
-      <img
-        src={h.imageSrc}
-        alt={h.imageAlt}
-        width={1800}
-        height={1200}
-        className="absolute inset-0 h-full w-full object-cover object-center"
-        fetchPriority="high"
-      />
+      {showHeroImage ? (
+        <img
+          src={h.imageSrc}
+          alt={h.imageAlt}
+          width={1800}
+          height={1200}
+          className="absolute inset-0 h-full w-full object-cover object-center"
+          fetchPriority="high"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-black" aria-hidden="true" />
+      )}
       <div className="hero-overlay absolute inset-0" />
 
       <div className="relative flex min-h-screen items-end px-5 pb-20 pt-32 md:px-8 lg:px-12">
