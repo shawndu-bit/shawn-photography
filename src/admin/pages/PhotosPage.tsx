@@ -22,6 +22,8 @@ function newPhoto(): Photo {
 export default function PhotosPage() {
   const { siteContent, saveContent } = useSiteContentContext()
   const [photos, setPhotos] = useState<Photo[]>(siteContent.photos)
+  const [uploading, setUploading] = useState<Record<string, boolean>>({})
+  const [uploadError, setUploadError] = useState<Record<string, string>>({})
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -57,6 +59,61 @@ export default function PhotosPage() {
     })
     setDirty(true)
     setSaved(false)
+  }
+
+  function existingR2Key(src: string) {
+    if (!src.startsWith('/uploads/')) return ''
+    return decodeURIComponent(src.replace('/uploads/', ''))
+  }
+
+  function imageDimensions(file: File): Promise<{ width: number; height: number }> {
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file)
+      const img = new Image()
+      img.onload = () => {
+        resolve({ width: img.naturalWidth, height: img.naturalHeight })
+        URL.revokeObjectURL(objectUrl)
+      }
+      img.onerror = () => {
+        reject(new Error('Unable to read image dimensions'))
+        URL.revokeObjectURL(objectUrl)
+      }
+      img.src = objectUrl
+    })
+  }
+
+  async function uploadPhotoFile(id: string, file: File) {
+    try {
+      setUploading((prev) => ({ ...prev, [id]: true }))
+      setUploadError((prev) => ({ ...prev, [id]: '' }))
+
+      const current = photos.find((p) => p.id === id)
+      if (!current) return
+
+      const dims = await imageDimensions(file)
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const key = existingR2Key(current.src)
+      if (key) formData.append('existingKey', key)
+
+      const res = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json() as { ok?: boolean; url?: string; error?: string }
+      if (!res.ok || !data.ok || !data.url) {
+        throw new Error(data.error || 'Upload failed')
+      }
+
+      updatePhoto(id, 'src', data.url)
+      updatePhoto(id, 'width', dims.width)
+      updatePhoto(id, 'height', dims.height)
+    } catch (error) {
+      setUploadError((prev) => ({ ...prev, [id]: String(error) }))
+    } finally {
+      setUploading((prev) => ({ ...prev, [id]: false }))
+    }
   }
 
   function handleSave() {
@@ -142,8 +199,26 @@ export default function PhotosPage() {
                   label="图片 URL"
                   value={photo.src}
                   onChange={(e) => updatePhoto(photo.id, 'src', e.target.value)}
-                  hint="Unsplash / Cloudflare R2 公开链接"
+                  hint="上传后自动生成，可手动覆盖为任意公开图片链接"
                 />
+                <div className="flex items-center gap-3">
+                  <label className="inline-flex cursor-pointer items-center rounded-full border border-white/12 px-4 py-2 text-[12px] text-white/70 transition hover:border-white/30 hover:text-white">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) uploadPhotoFile(photo.id, file)
+                        e.currentTarget.value = ''
+                      }}
+                    />
+                    {uploading[photo.id] ? '上传中...' : '上传图片到 R2'}
+                  </label>
+                  {uploadError[photo.id] && (
+                    <span className="text-[12px] text-red-400">{uploadError[photo.id]}</span>
+                  )}
+                </div>
                 <Field
                   label="Alt 描述"
                   value={photo.alt}
