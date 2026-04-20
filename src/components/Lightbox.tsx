@@ -43,8 +43,16 @@ export default function Lightbox({ photo, onClose }: LightboxProps) {
           height={photo.height}
           className="max-h-[86vh] w-auto max-w-full object-contain"
         />
-        <figcaption className="text-center text-[11px] uppercase tracking-[0.35em] text-white/55">
-          {photo.title}
+        <figcaption className="w-full max-w-3xl space-y-2 px-1 text-white/70">
+          <p className="text-center text-[12px] uppercase tracking-[0.35em] text-white/70">
+            {photo.title || 'Untitled'}
+          </p>
+          <p className="text-left text-[13px] leading-6 text-white/60">
+            {photo.description?.trim() || '—'}
+          </p>
+          <p className="text-left text-[12px] tracking-[0.08em] text-white/50">
+            {photo.specifications?.trim() || '—'}
+          </p>
         </figcaption>
       </figure>
     </div>

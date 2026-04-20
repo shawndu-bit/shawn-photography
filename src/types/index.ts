@@ -1,14 +1,17 @@
 export type PhotoCategory =
   | 'mountains'
-  | 'ocean'
+  | 'sea_lakes'
   | 'nightscape'
-  | 'desert'
   | 'forest'
+  | 'city'
 
 export interface Photo {
   id: string
   title: string
+  description: string
+  specifications: string
   src: string
+  thumbnailSrc: string
   width: number
   height: number
   category: PhotoCategory

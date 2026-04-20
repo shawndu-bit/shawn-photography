@@ -4,6 +4,12 @@ import { defaultSiteContent } from '@/data/siteContent'
 
 const STORAGE_KEY = 'shawn-photography-site-content'
 
+function normalizeCategory(category: string | undefined) {
+  if (category === 'ocean') return 'sea_lakes'
+  if (category === 'desert') return 'city'
+  return (category ?? 'mountains') as SiteContent['photos'][number]['category']
+}
+
 function readSiteContent(): SiteContent {
   if (typeof window === 'undefined') return defaultSiteContent
 
@@ -12,6 +18,14 @@ function readSiteContent(): SiteContent {
 
   try {
     const parsed = JSON.parse(raw) as Partial<SiteContent>
+    const mergedPhotos = (parsed.photos ?? defaultSiteContent.photos).map((photo) => ({
+      ...photo,
+      category: normalizeCategory(photo.category),
+      description: photo.description ?? '',
+      specifications: photo.specifications ?? '',
+      thumbnailSrc: photo.thumbnailSrc ?? photo.src,
+    }))
+
     return {
       ...defaultSiteContent,
       ...parsed,
@@ -34,7 +48,7 @@ function readSiteContent(): SiteContent {
       },
       socialLinks: parsed.socialLinks ?? defaultSiteContent.socialLinks,
       blogPosts: parsed.blogPosts ?? defaultSiteContent.blogPosts,
-      photos: parsed.photos ?? defaultSiteContent.photos,
+      photos: mergedPhotos,
       sectionVisibility: {
         ...defaultSiteContent.sectionVisibility,
         ...parsed.sectionVisibility,
