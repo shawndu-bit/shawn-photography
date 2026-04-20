@@ -128,15 +128,13 @@ function getIcon(link: SocialLink) {
   return iconByPlatform[key] ?? (key ? Globe : Circle)
 }
 
+function isDisplayableLink(link: SocialLink) {
+  return link.enabled && link.href.trim().length > 0
+}
+
 export default function Footer() {
   const { siteContent } = useSiteContentContext()
-  const links = siteContent.socialLinks
-    .filter((link) => link.enabled && PUBLIC_SOCIAL_SET.has(link.platform.trim().toLowerCase()))
-    .sort(
-      (a, b) =>
-        PUBLIC_SOCIAL_ORDER.indexOf(a.platform.trim().toLowerCase() as (typeof PUBLIC_SOCIAL_ORDER)[number]) -
-        PUBLIC_SOCIAL_ORDER.indexOf(b.platform.trim().toLowerCase() as (typeof PUBLIC_SOCIAL_ORDER)[number]),
-    )
+  const links = siteContent.socialLinks.filter(isDisplayableLink)
 
   return (
     <footer className="border-t border-white/10 px-5 py-10 md:px-8 lg:px-12">
