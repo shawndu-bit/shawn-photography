@@ -5,12 +5,14 @@ import SaveBar from '@/admin/components/ui/SaveBar'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import type { Photo, PhotoCategory } from '@/types'
 
-const CATEGORIES: PhotoCategory[] = ['mountains', 'ocean', 'nightscape', 'desert', 'forest']
+const CATEGORIES: PhotoCategory[] = ['mountains', 'sea_lakes', 'forest', 'nightscape', 'city']
 
 function newPhoto(): Photo {
   return {
     id: Date.now().toString(),
     title: '',
+    description: '',
+    specifications: '',
     src: '',
     thumbnailSrc: '',
     width: 1400,
@@ -203,6 +205,19 @@ export default function PhotosPage() {
                   label="标题"
                   value={photo.title}
                   onChange={(e) => updatePhoto(photo.id, 'title', e.target.value)}
+                />
+                <Field
+                  as="textarea"
+                  label="描述（Lightbox）"
+                  value={photo.description}
+                  onChange={(e) => updatePhoto(photo.id, 'description', e.target.value)}
+                  rows={3}
+                />
+                <Field
+                  label="照片规格（Lightbox）"
+                  value={photo.specifications}
+                  onChange={(e) => updatePhoto(photo.id, 'specifications', e.target.value)}
+                  placeholder="例如：Sony A7R5 · 24-70mm · ISO 200 · 1/125s"
                 />
                 <Field
                   label="原图 URL"
