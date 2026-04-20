@@ -9,7 +9,7 @@ export default function ContactSection() {
       <div className="mx-auto flex max-w-7xl flex-col gap-12 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl">
           <p className="mb-5 text-sm uppercase tracking-[0.5em] text-white/40">{c.eyebrow}</p>
-          <h2 className="font-display text-4xl leading-tight text-white md:text-5xl">{c.title}</h2>
+          <h2 className="font-display text-3xl leading-tight text-white md:text-4xl">{c.title}</h2>
         </div>
         <a
           href={`mailto:${c.email}`}
