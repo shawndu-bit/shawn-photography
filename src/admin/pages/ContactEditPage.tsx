@@ -4,6 +4,7 @@ import Field from '@/admin/components/ui/Field'
 import SaveBar from '@/admin/components/ui/SaveBar'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import type { ContactContent, SocialLink } from '@/types'
+import { defaultSiteContent } from '@/data/siteContent'
 
 function newSocialLink(): SocialLink {
   return {
@@ -21,9 +22,21 @@ export default function ContactEditPage() {
   const [links, setLinks] = useState<SocialLink[]>(siteContent.socialLinks)
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [recommendedApplied, setRecommendedApplied] = useState(false)
 
   useEffect(() => { setForm(siteContent.contact) }, [siteContent.contact])
   useEffect(() => { setLinks(siteContent.socialLinks) }, [siteContent.socialLinks])
+  useEffect(() => {
+    if (!dirty) return
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [dirty])
 
   function set<K extends keyof ContactContent>(key: K, val: ContactContent[K]) {
     setForm((f) => ({ ...f, [key]: val }))
@@ -53,13 +66,26 @@ export default function ContactEditPage() {
     saveContent({ ...siteContent, contact: form, socialLinks: links })
     setDirty(false)
     setSaved(true)
+    setRecommendedApplied(false)
   }
 
   function handleReset() {
     setForm(siteContent.contact)
     setLinks(siteContent.socialLinks)
     setDirty(false)
+    setRecommendedApplied(false)
   }
+
+  function applyRecommendedLinks() {
+    setLinks(defaultSiteContent.socialLinks)
+    setDirty(true)
+    setSaved(false)
+    setRecommendedApplied(true)
+  }
+
+  const enabledPlatforms = links
+    .filter((link) => link.enabled)
+    .map((link) => link.label || link.platform || '(未命名平台)')
 
   return (
     <AdminLayout>
@@ -68,6 +94,16 @@ export default function ContactEditPage() {
         <h1 className="mb-8 font-display text-3xl text-white">Contact 联系</h1>
 
         <div className="max-w-2xl space-y-6">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-white/45">保存状态</p>
+            <p className={`mt-2 text-[12px] ${dirty ? 'text-amber-300' : 'text-emerald-300'}`}>
+              {dirty ? '有未保存修改：当前改动尚未同步到公开页。' : '当前内容已保存并同步。'}
+            </p>
+            {saved && !dirty && (
+              <p className="mt-1 text-[12px] text-green-400">✓ 保存成功，公开页将使用此配置。</p>
+            )}
+          </div>
+
           <Field
             label="眉题（Eyebrow）"
             value={form.eyebrow}
@@ -91,12 +127,38 @@ export default function ContactEditPage() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-6">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">社交图标链接</p>
-              <button
-                onClick={addLink}
-                className="rounded-full border border-white/10 px-4 py-1.5 text-[11px] tracking-wide text-white/50 transition hover:border-white/20 hover:text-white/80"
-              >
-                + 新增链接
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={applyRecommendedLinks}
+                  className="rounded-full border border-white/10 px-4 py-1.5 text-[11px] tracking-wide text-white/50 transition hover:border-white/20 hover:text-white/80"
+                >
+                  应用推荐平台配置
+                </button>
+                <button
+                  onClick={addLink}
+                  className="rounded-full border border-white/10 px-4 py-1.5 text-[11px] tracking-wide text-white/50 transition hover:border-white/20 hover:text-white/80"
+                >
+                  + 新增链接
+                </button>
+              </div>
+            </div>
+            <p className="mb-3 text-[12px] text-white/50">
+              推荐配置会默认启用 Instagram / TikTok / Facebook / YouTube / Email，并将其他平台重置为未启用。
+            </p>
+            {recommendedApplied && (
+              <div className="mb-4 rounded-xl border border-amber-300/30 bg-amber-300/10 px-4 py-3 text-[12px] text-amber-100">
+                已应用推荐配置：Bilibili、Xiaohongshu、Behance、500px 等非默认平台会被重置为未启用。若需公开显示，请手动重新启用并点击“保存修改”。
+              </div>
+            )}
+
+            <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.015] px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">公开页将显示（保存后）</p>
+              <p className="mt-2 text-[12px] leading-relaxed text-white/75">
+                {enabledPlatforms.length > 0 ? enabledPlatforms.join(' · ') : '当前没有启用的平台'}
+              </p>
+              {dirty && (
+                <p className="mt-1 text-[11px] text-amber-300/90">以上为待保存状态，需点击底部“保存修改”后才会生效。</p>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -123,7 +185,7 @@ export default function ContactEditPage() {
                       label="图标平台标识（platform）"
                       value={link.platform}
                       onChange={(e) => updateLink(link.id, 'platform', e.target.value)}
-                      placeholder="instagram / facebook / bilibili / email"
+                      placeholder="instagram / tiktok / facebook / youtube / email"
                     />
                     <Field
                       label="URL / 超链接"

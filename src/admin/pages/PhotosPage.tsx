@@ -12,6 +12,7 @@ function newPhoto(): Photo {
     id: Date.now().toString(),
     title: '',
     src: '',
+    thumbnailSrc: '',
     width: 1400,
     height: 1000,
     category: 'mountains',
@@ -61,9 +62,9 @@ export default function PhotosPage() {
     setSaved(false)
   }
 
-  function existingR2Key(src: string) {
-    if (!src.startsWith('/uploads/')) return ''
-    return decodeURIComponent(src.replace('/uploads/', ''))
+  function existingR2Key(path: string) {
+    if (!path.startsWith('/uploads/')) return ''
+    return decodeURIComponent(path.replace('/uploads/', ''))
   }
 
   function imageDimensions(file: File): Promise<{ width: number; height: number }> {
@@ -94,19 +95,27 @@ export default function PhotosPage() {
       const formData = new FormData()
       formData.append('file', file)
 
-      const key = existingR2Key(current.src)
-      if (key) formData.append('existingKey', key)
+      const existingOriginalKey = existingR2Key(current.src)
+      const existingThumbKey = existingR2Key(current.thumbnailSrc || '')
+      if (existingOriginalKey) formData.append('existingOriginalKey', existingOriginalKey)
+      if (existingThumbKey) formData.append('existingThumbKey', existingThumbKey)
 
       const res = await fetch('/api/admin/upload-image', {
         method: 'POST',
         body: formData,
       })
-      const data = await res.json() as { ok?: boolean; url?: string; error?: string }
-      if (!res.ok || !data.ok || !data.url) {
+      const data = await res.json() as {
+        ok?: boolean
+        originalUrl?: string
+        thumbnailUrl?: string
+        error?: string
+      }
+      if (!res.ok || !data.ok || !data.originalUrl || !data.thumbnailUrl) {
         throw new Error(data.error || 'Upload failed')
       }
 
-      updatePhoto(id, 'src', data.url)
+      updatePhoto(id, 'src', data.originalUrl)
+      updatePhoto(id, 'thumbnailSrc', data.thumbnailUrl)
       updatePhoto(id, 'width', dims.width)
       updatePhoto(id, 'height', dims.height)
     } catch (error) {
@@ -196,10 +205,16 @@ export default function PhotosPage() {
                   onChange={(e) => updatePhoto(photo.id, 'title', e.target.value)}
                 />
                 <Field
-                  label="图片 URL"
+                  label="原图 URL"
                   value={photo.src}
                   onChange={(e) => updatePhoto(photo.id, 'src', e.target.value)}
                   hint="上传后自动生成，可手动覆盖为任意公开图片链接"
+                />
+                <Field
+                  label="缩略图 URL"
+                  value={photo.thumbnailSrc || ''}
+                  onChange={(e) => updatePhoto(photo.id, 'thumbnailSrc', e.target.value)}
+                  hint="自动生成（最长边 640px），用于作品列表展示"
                 />
                 <div className="flex items-center gap-3">
                   <label className="inline-flex cursor-pointer items-center rounded-full border border-white/12 px-4 py-2 text-[12px] text-white/70 transition hover:border-white/30 hover:text-white">

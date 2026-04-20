@@ -25,7 +25,7 @@ export default function PortfolioSection({ onPhotoClick }: Props) {
         >
           <div className="relative overflow-hidden">
             <img
-              src={photo.src}
+              src={photo.thumbnailSrc || photo.src}
               alt={photo.alt}
               width={photo.width}
               height={photo.height}

@@ -9,7 +9,7 @@ export default function AboutSection() {
       <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
         <div>
           <p className="mb-5 text-sm uppercase tracking-[0.5em] text-white/40">{a.eyebrow}</p>
-          <h2 className="max-w-3xl font-display text-4xl leading-tight text-white md:text-5xl">
+          <h2 className="max-w-3xl font-display text-3xl leading-tight text-white md:text-4xl">
             {a.title}
           </h2>
         </div>
