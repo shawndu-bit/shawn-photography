@@ -28,12 +28,13 @@ export const defaultSiteContent: SiteContent = {
   },
   socialLinks: [
     { id: 'instagram', label: 'Instagram', platform: 'instagram', href: '#', enabled: true },
+    { id: 'tiktok', label: 'TikTok', platform: 'tiktok', href: '#', enabled: true },
     { id: 'facebook', label: 'Facebook', platform: 'facebook', href: '#', enabled: true },
     { id: 'youtube', label: 'YouTube', platform: 'youtube', href: '#', enabled: true },
-    { id: 'bilibili', label: 'Bilibili', platform: 'bilibili', href: '#', enabled: true },
-    { id: 'xiaohongshu', label: 'Xiaohongshu', platform: 'xiaohongshu', href: '#', enabled: true },
-    { id: 'behance', label: 'Behance', platform: 'behance', href: '#', enabled: true },
-    { id: '500px', label: '500px', platform: '500px', href: '#', enabled: true },
+    { id: 'bilibili', label: 'Bilibili', platform: 'bilibili', href: '#', enabled: false },
+    { id: 'xiaohongshu', label: 'Xiaohongshu', platform: 'xiaohongshu', href: '#', enabled: false },
+    { id: 'behance', label: 'Behance', platform: 'behance', href: '#', enabled: false },
+    { id: '500px', label: '500px', platform: '500px', href: '#', enabled: false },
     { id: 'email', label: 'Email', platform: 'email', href: 'mailto:hello@example.com', enabled: true },
   ],
   blogPosts: [
