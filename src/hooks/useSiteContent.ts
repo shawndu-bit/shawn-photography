@@ -12,6 +12,11 @@ function readSiteContent(): SiteContent {
 
   try {
     const parsed = JSON.parse(raw) as Partial<SiteContent>
+    const mergedPhotos = (parsed.photos ?? defaultSiteContent.photos).map((photo) => ({
+      ...photo,
+      thumbnailSrc: photo.thumbnailSrc ?? photo.src,
+    }))
+
     return {
       ...defaultSiteContent,
       ...parsed,
@@ -34,7 +39,7 @@ function readSiteContent(): SiteContent {
       },
       socialLinks: parsed.socialLinks ?? defaultSiteContent.socialLinks,
       blogPosts: parsed.blogPosts ?? defaultSiteContent.blogPosts,
-      photos: parsed.photos ?? defaultSiteContent.photos,
+      photos: mergedPhotos,
       sectionVisibility: {
         ...defaultSiteContent.sectionVisibility,
         ...parsed.sectionVisibility,

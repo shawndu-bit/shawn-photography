@@ -9,6 +9,7 @@ export interface Photo {
   id: string
   title: string
   src: string
+  thumbnailSrc: string
   width: number
   height: number
   category: PhotoCategory
