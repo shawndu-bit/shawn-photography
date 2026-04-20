@@ -1,5 +1,7 @@
 export interface Env {
   ASSETS: Fetcher;
+  DATABASE_URL?: string;
+  DATABASE_URL_UNPOOLED?: string;
   BUCKET?: {
     put(
       key: string,
@@ -29,6 +31,20 @@ interface ImagesPipeline {
 
 interface ImagesBinding {
   input(stream: ReadableStream): ImagesPipeline
+}
+
+interface SitePhotoRow {
+  id: string
+  title: string
+  src: string
+  thumbnail_src: string
+  width: number
+  height: number
+  category: string
+  alt: string
+  description: string
+  specifications: string
+  position: number
 }
 
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -65,9 +81,179 @@ function shouldServeSpaShell(request: Request) {
   return accept.includes('text/html')
 }
 
+function getConnectionString(env: Env) {
+  if (!env.DATABASE_URL) {
+    throw new Error('DATABASE_URL is not configured')
+  }
+
+  return env.DATABASE_URL
+}
+
+async function neonQuery<T>(env: Env, query: string, params: unknown[] = []): Promise<T[]> {
+  const connectionString = getConnectionString(env)
+  const parsed = new URL(connectionString)
+  const sqlEndpoint = `https://${parsed.hostname}/sql`
+
+  const response = await fetch(sqlEndpoint, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'Neon-Connection-String': connectionString,
+      'Neon-Raw-Text-Output': 'true',
+      'Neon-Array-Mode': 'false',
+    },
+    body: JSON.stringify({ query, params }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Neon query failed (${response.status}): ${await response.text()}`)
+  }
+
+  const data = await response.json() as { rows?: T[]; message?: string }
+  if (!Array.isArray(data.rows)) {
+    throw new Error(data.message || 'Invalid Neon response')
+  }
+
+  return data.rows
+}
+
+function parseJsonBody<T>(request: Request): Promise<T> {
+  return request.json() as Promise<T>
+}
+
+async function loadSiteContent(env: Env) {
+  const siteRows = await neonQuery<{
+    hero: Record<string, unknown>
+    about: Record<string, unknown>
+    contact: Record<string, unknown>
+    blog: Record<string, unknown>
+    social_links: unknown[]
+    blog_posts: unknown[]
+    section_visibility: Record<string, unknown>
+  }>(
+    env,
+    `SELECT hero, about, contact, blog, social_links, blog_posts, section_visibility
+     FROM site_content
+     WHERE id = 1`,
+  )
+
+  const photos = await neonQuery<SitePhotoRow>(
+    env,
+    `SELECT id, title, src, thumbnail_src, width, height, category, alt, description, specifications, position
+     FROM site_photos
+     ORDER BY position ASC, created_at ASC`,
+  )
+
+  const site = siteRows[0]
+
+  return {
+    hero: site?.hero,
+    about: site?.about,
+    contact: site?.contact,
+    blog: site?.blog,
+    socialLinks: site?.social_links,
+    blogPosts: site?.blog_posts,
+    sectionVisibility: site?.section_visibility,
+    photos: photos.map((photo) => ({
+      id: photo.id,
+      title: photo.title,
+      src: photo.src,
+      thumbnailSrc: photo.thumbnail_src,
+      width: photo.width,
+      height: photo.height,
+      category: photo.category,
+      alt: photo.alt,
+      description: photo.description,
+      specifications: photo.specifications,
+    })),
+  }
+}
+
+async function saveSiteContent(env: Env, data: Record<string, unknown>) {
+  const hero = data.hero ?? {}
+  const about = data.about ?? {}
+  const contact = data.contact ?? {}
+  const blog = data.blog ?? {}
+  const socialLinks = Array.isArray(data.socialLinks) ? data.socialLinks : []
+  const blogPosts = Array.isArray(data.blogPosts) ? data.blogPosts : []
+  const sectionVisibility = data.sectionVisibility ?? {}
+  const photos = Array.isArray(data.photos) ? data.photos : []
+
+  await neonQuery(
+    env,
+    `INSERT INTO site_content (id, hero, about, contact, blog, social_links, blog_posts, section_visibility)
+     VALUES (1, $1::jsonb, $2::jsonb, $3::jsonb, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb)
+     ON CONFLICT (id) DO UPDATE
+     SET
+       hero = EXCLUDED.hero,
+       about = EXCLUDED.about,
+       contact = EXCLUDED.contact,
+       blog = EXCLUDED.blog,
+       social_links = EXCLUDED.social_links,
+       blog_posts = EXCLUDED.blog_posts,
+       section_visibility = EXCLUDED.section_visibility,
+       updated_at = NOW()`,
+    [
+      JSON.stringify(hero),
+      JSON.stringify(about),
+      JSON.stringify(contact),
+      JSON.stringify(blog),
+      JSON.stringify(socialLinks),
+      JSON.stringify(blogPosts),
+      JSON.stringify(sectionVisibility),
+    ],
+  )
+
+  await neonQuery(env, 'DELETE FROM site_photos')
+
+  for (const [index, rawPhoto] of photos.entries()) {
+    const photo = rawPhoto as Record<string, unknown>
+    await neonQuery(
+      env,
+      `INSERT INTO site_photos (
+         id, title, src, thumbnail_src, width, height, category, alt, description, specifications, position, updated_at
+       ) VALUES (
+         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW()
+       )`,
+      [
+        String(photo.id ?? `${Date.now()}-${index}`),
+        String(photo.title ?? ''),
+        String(photo.src ?? ''),
+        String(photo.thumbnailSrc ?? photo.src ?? ''),
+        Number(photo.width ?? 0),
+        Number(photo.height ?? 0),
+        String(photo.category ?? 'mountains'),
+        String(photo.alt ?? ''),
+        String(photo.description ?? ''),
+        String(photo.specifications ?? ''),
+        index,
+      ],
+    )
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
+
+    if (request.method === 'GET' && url.pathname === '/api/site-content') {
+      try {
+        const data = await loadSiteContent(env)
+        return Response.json({ ok: true, data })
+      } catch (error) {
+        return Response.json({ ok: false, error: `Site content load failed: ${String(error)}` }, { status: 500 })
+      }
+    }
+
+    if (request.method === 'PUT' && url.pathname === '/api/admin/site-content') {
+      try {
+        const body = await parseJsonBody<Record<string, unknown>>(request)
+        await saveSiteContent(env, body)
+        return Response.json({ ok: true })
+      } catch (error) {
+        return Response.json({ ok: false, error: `Site content save failed: ${String(error)}` }, { status: 500 })
+      }
+    }
 
     if (request.method === 'GET' && url.pathname.startsWith('/uploads/')) {
       if (!env.BUCKET) return new Response('R2 bucket not configured', { status: 500 })

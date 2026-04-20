@@ -62,8 +62,8 @@ export default function ContactEditPage() {
     setSaved(false)
   }
 
-  function handleSave() {
-    saveContent({ ...siteContent, contact: form, socialLinks: links })
+  async function handleSave() {
+    await saveContent({ ...siteContent, contact: form, socialLinks: links })
     setDirty(false)
     setSaved(true)
     setRecommendedApplied(false)

@@ -33,8 +33,8 @@ export default function AboutEditPage() {
     set('paragraphs', form.paragraphs.filter((_, i) => i !== index))
   }
 
-  function handleSave() {
-    saveContent({ ...siteContent, about: form })
+  async function handleSave() {
+    await saveContent({ ...siteContent, about: form })
     setDirty(false)
     setSaved(true)
   }

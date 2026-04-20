@@ -127,8 +127,8 @@ export default function PhotosPage() {
     }
   }
 
-  function handleSave() {
-    saveContent({ ...siteContent, photos })
+  async function handleSave() {
+    await saveContent({ ...siteContent, photos })
     setDirty(false)
     setSaved(true)
   }

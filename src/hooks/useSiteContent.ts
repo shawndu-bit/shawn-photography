@@ -1,61 +1,40 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { SiteContent } from '@/types'
 import { defaultSiteContent } from '@/data/siteContent'
+import { LEGACY_STORAGE_KEY, mergeSiteContent, readLegacyLocalSiteContent } from '@/lib/siteContent'
 
-const STORAGE_KEY = 'shawn-photography-site-content'
+async function fetchSiteContent(): Promise<SiteContent> {
+  const res = await fetch('/api/site-content', {
+    method: 'GET',
+    headers: { accept: 'application/json' },
+  })
 
-function normalizeCategory(category: string | undefined) {
-  if (category === 'ocean') return 'sea_lakes'
-  if (category === 'desert') return 'city'
-  return (category ?? 'mountains') as SiteContent['photos'][number]['category']
+  if (!res.ok) {
+    throw new Error(`Failed to fetch site content: ${res.status}`)
+  }
+
+  const data = (await res.json()) as { ok?: boolean; data?: Partial<SiteContent>; error?: string }
+  if (!data.ok || !data.data) {
+    throw new Error(data.error || 'Invalid site content response')
+  }
+
+  return mergeSiteContent(data.data)
 }
 
-function readSiteContent(): SiteContent {
-  if (typeof window === 'undefined') return defaultSiteContent
+async function persistSiteContent(next: SiteContent): Promise<void> {
+  const res = await fetch('/api/admin/site-content', {
+    method: 'PUT',
+    headers: {
+      'content-type': 'application/json',
+      accept: 'application/json',
+    },
+    body: JSON.stringify(next),
+  })
 
-  const raw = window.localStorage.getItem(STORAGE_KEY)
-  if (!raw) return defaultSiteContent
+  const data = (await res.json()) as { ok?: boolean; error?: string }
 
-  try {
-    const parsed = JSON.parse(raw) as Partial<SiteContent>
-    const mergedPhotos = (parsed.photos ?? defaultSiteContent.photos).map((photo) => ({
-      ...photo,
-      category: normalizeCategory(photo.category),
-      description: photo.description ?? '',
-      specifications: photo.specifications ?? '',
-      thumbnailSrc: photo.thumbnailSrc ?? photo.src,
-    }))
-
-    return {
-      ...defaultSiteContent,
-      ...parsed,
-      hero: {
-        ...defaultSiteContent.hero,
-        ...parsed.hero,
-      },
-      about: {
-        ...defaultSiteContent.about,
-        ...parsed.about,
-        paragraphs: parsed.about?.paragraphs ?? defaultSiteContent.about.paragraphs,
-      },
-      contact: {
-        ...defaultSiteContent.contact,
-        ...parsed.contact,
-      },
-      blog: {
-        ...defaultSiteContent.blog,
-        ...parsed.blog,
-      },
-      socialLinks: parsed.socialLinks ?? defaultSiteContent.socialLinks,
-      blogPosts: parsed.blogPosts ?? defaultSiteContent.blogPosts,
-      photos: mergedPhotos,
-      sectionVisibility: {
-        ...defaultSiteContent.sectionVisibility,
-        ...parsed.sectionVisibility,
-      },
-    }
-  } catch {
-    return defaultSiteContent
+  if (!res.ok || !data.ok) {
+    throw new Error(data.error || `Failed to save site content: ${res.status}`)
   }
 }
 
@@ -64,31 +43,55 @@ export function useSiteContent() {
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    setSiteContent(readSiteContent())
-    setHydrated(true)
+    let active = true
+
+    const load = async () => {
+      const legacy = readLegacyLocalSiteContent()
+
+      try {
+        const remote = await fetchSiteContent()
+        if (!active) return
+        setSiteContent(remote)
+      } catch {
+        if (!active) return
+        setSiteContent(legacy ?? defaultSiteContent)
+      } finally {
+        if (active) setHydrated(true)
+      }
+    }
+
+    void load()
+
+    return () => {
+      active = false
+    }
   }, [])
 
-  const actions = useMemo(
-    () => ({
-      saveContent(next: SiteContent) {
-        setSiteContent(next)
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-        }
-      },
-      resetContent() {
-        setSiteContent(defaultSiteContent)
-        if (typeof window !== 'undefined') {
-          window.localStorage.removeItem(STORAGE_KEY)
-        }
-      },
-    }),
-    [],
-  )
+  const saveContent = useCallback(async (next: SiteContent) => {
+    await persistSiteContent(next)
+    setSiteContent(next)
 
-  return {
-    siteContent,
-    hydrated,
-    ...actions,
-  }
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(next))
+    }
+  }, [])
+
+  const resetContent = useCallback(async () => {
+    await persistSiteContent(defaultSiteContent)
+    setSiteContent(defaultSiteContent)
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(LEGACY_STORAGE_KEY)
+    }
+  }, [])
+
+  return useMemo(
+    () => ({
+      siteContent,
+      hydrated,
+      saveContent,
+      resetContent,
+    }),
+    [hydrated, resetContent, saveContent, siteContent],
+  )
 }
