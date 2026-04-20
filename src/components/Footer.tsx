@@ -10,6 +10,9 @@ import type { ComponentType } from 'react'
 import type { SocialLink } from '@/types'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 
+const PUBLIC_SOCIAL_ORDER = ['instagram', 'tiktok', 'facebook', 'youtube', 'email'] as const
+const PUBLIC_SOCIAL_SET = new Set<string>(PUBLIC_SOCIAL_ORDER)
+
 const iconByPlatform: Record<string, ComponentType<{ className?: string }>> = {
   instagram: Instagram,
   tiktok: TikTokIcon,
@@ -127,7 +130,13 @@ function getIcon(link: SocialLink) {
 
 export default function Footer() {
   const { siteContent } = useSiteContentContext()
-  const links = siteContent.socialLinks.filter((link) => link.enabled)
+  const links = siteContent.socialLinks
+    .filter((link) => link.enabled && PUBLIC_SOCIAL_SET.has(link.platform.trim().toLowerCase()))
+    .sort(
+      (a, b) =>
+        PUBLIC_SOCIAL_ORDER.indexOf(a.platform.trim().toLowerCase() as (typeof PUBLIC_SOCIAL_ORDER)[number]) -
+        PUBLIC_SOCIAL_ORDER.indexOf(b.platform.trim().toLowerCase() as (typeof PUBLIC_SOCIAL_ORDER)[number]),
+    )
 
   return (
     <footer className="border-t border-white/10 px-5 py-10 md:px-8 lg:px-12">
