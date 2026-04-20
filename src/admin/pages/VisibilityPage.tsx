@@ -26,8 +26,8 @@ export default function VisibilityPage() {
     setSaved(false)
   }
 
-  function handleSave() {
-    saveContent({ ...siteContent, sectionVisibility: vis })
+  async function handleSave() {
+    await saveContent({ ...siteContent, sectionVisibility: vis })
     setDirty(false)
     setSaved(true)
   }

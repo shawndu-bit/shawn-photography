@@ -42,8 +42,8 @@ export default function BlogEditPage() {
     setSaved(false)
   }
 
-  function handleSave() {
-    saveContent({ ...siteContent, blog, blogPosts: posts })
+  async function handleSave() {
+    await saveContent({ ...siteContent, blog, blogPosts: posts })
     setDirty(false)
     setSaved(true)
   }
