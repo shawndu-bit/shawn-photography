@@ -86,59 +86,67 @@ export default {
     }
 
     if (request.method === 'POST' && url.pathname === '/api/admin/upload-image') {
-      if (!env.BUCKET) return Response.json({ ok: false, error: 'R2 bucket not configured' }, { status: 500 })
-      if (!env.IMAGES) return Response.json({ ok: false, error: 'Images binding not configured' }, { status: 500 })
+      try {
+        if (!env.BUCKET) return Response.json({ ok: false, error: 'R2 bucket not configured' }, { status: 500 })
+        if (!env.IMAGES) return Response.json({ ok: false, error: 'Images binding not configured' }, { status: 500 })
 
-      const formData = await request.formData()
-      const file = formData.get('file')
-      const existingOriginalKey = String(formData.get('existingOriginalKey') || '').trim()
-      const existingThumbKey = String(formData.get('existingThumbKey') || '').trim()
+        const formData = await request.formData()
+        const file = formData.get('file')
+        const existingOriginalKey = String(formData.get('existingOriginalKey') || '').trim()
+        const existingThumbKey = String(formData.get('existingThumbKey') || '').trim()
 
-      if (!(file instanceof File)) {
-        return Response.json({ ok: false, error: 'Missing file' }, { status: 400 })
+        if (!(file instanceof File)) {
+          return Response.json({ ok: false, error: 'Missing file' }, { status: 400 })
+        }
+        if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+          return Response.json({ ok: false, error: 'Unsupported file type' }, { status: 400 })
+        }
+
+        const reusableOriginalKey = existingOriginalKey.startsWith('uploads/original/')
+          ? existingOriginalKey
+          : ''
+        const reusableThumbKey = existingThumbKey.startsWith('uploads/thumb/')
+          ? existingThumbKey
+          : ''
+
+        const originalKey = reusableOriginalKey || buildOriginalKey(file.name)
+        const thumbnailKey = reusableThumbKey || buildThumbnailKey(file.name)
+
+        await env.BUCKET.put(originalKey, file, {
+          httpMetadata: { contentType: file.type || 'application/octet-stream' },
+        })
+
+        const transformed = await env.IMAGES
+          .input(file.stream())
+          .transform({ width: 640, height: 640, fit: 'scale-down' })
+          .output({ format: 'image/webp', quality: 82 })
+          .response()
+
+        if (!transformed.ok) {
+          return Response.json({ ok: false, error: 'Thumbnail generation failed' }, { status: 500 })
+        }
+
+        const thumbContentType = transformed.headers.get('content-type') ?? 'image/webp'
+        const thumbBody = transformed.body ?? await transformed.arrayBuffer()
+
+        await env.BUCKET.put(thumbnailKey, thumbBody, {
+          httpMetadata: { contentType: thumbContentType },
+        })
+
+        return Response.json({
+          ok: true,
+          originalKey,
+          originalUrl: `/uploads/${encodeURIComponent(originalKey)}`,
+          thumbnailKey,
+          thumbnailUrl: `/uploads/${encodeURIComponent(thumbnailKey)}`,
+        })
+      } catch (error) {
+        return Response.json({ ok: false, error: `Upload failed: ${String(error)}` }, { status: 500 })
       }
-      if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
-        return Response.json({ ok: false, error: 'Unsupported file type' }, { status: 400 })
-      }
+    }
 
-      const reusableOriginalKey = existingOriginalKey.startsWith('uploads/original/')
-        ? existingOriginalKey
-        : ''
-      const reusableThumbKey = existingThumbKey.startsWith('uploads/thumb/')
-        ? existingThumbKey
-        : ''
-
-      const originalKey = reusableOriginalKey || buildOriginalKey(file.name)
-      const thumbnailKey = reusableThumbKey || buildThumbnailKey(file.name)
-
-      await env.BUCKET.put(originalKey, file, {
-        httpMetadata: { contentType: file.type || 'application/octet-stream' },
-      })
-
-      const transformed = await env.IMAGES
-        .input(file.stream())
-        .transform({ width: 640, height: 640, fit: 'scale-down' })
-        .output({ format: 'image/webp', quality: 82 })
-        .response()
-
-      if (!transformed.ok) {
-        return Response.json({ ok: false, error: 'Thumbnail generation failed' }, { status: 500 })
-      }
-
-      const thumbContentType = transformed.headers.get('content-type') ?? 'image/webp'
-      const thumbBody = transformed.body ?? await transformed.arrayBuffer()
-
-      await env.BUCKET.put(thumbnailKey, thumbBody, {
-        httpMetadata: { contentType: thumbContentType },
-      })
-
-      return Response.json({
-        ok: true,
-        originalKey,
-        originalUrl: `/uploads/${encodeURIComponent(originalKey)}`,
-        thumbnailKey,
-        thumbnailUrl: `/uploads/${encodeURIComponent(thumbnailKey)}`,
-      })
+    if (url.pathname.startsWith('/api/')) {
+      return Response.json({ ok: false, error: 'API route not found' }, { status: 404 })
     }
 
     if (request.method === 'GET' && url.pathname === '/__diag/r2') {
