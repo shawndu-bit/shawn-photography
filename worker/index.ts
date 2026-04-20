@@ -120,14 +120,15 @@ export default {
           .input(file.stream())
           .transform({ width: 640, height: 640, fit: 'scale-down' })
           .output({ format: 'image/webp', quality: 82 })
-          .response()
 
-        if (!transformed.ok) {
+        const transformedResponse = await transformed.response()
+
+        if (!transformedResponse.ok) {
           return Response.json({ ok: false, error: 'Thumbnail generation failed' }, { status: 500 })
         }
 
-        const thumbContentType = transformed.headers.get('content-type') ?? 'image/webp'
-        const thumbBody = transformed.body ?? await transformed.arrayBuffer()
+        const thumbContentType = transformedResponse.headers.get('content-type') ?? 'image/webp'
+        const thumbBody = transformedResponse.body ?? await transformedResponse.arrayBuffer()
 
         await env.BUCKET.put(thumbnailKey, thumbBody, {
           httpMetadata: { contentType: thumbContentType },
