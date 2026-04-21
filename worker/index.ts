@@ -121,6 +121,35 @@ function parseJsonBody<T>(request: Request): Promise<T> {
   return request.json() as Promise<T>
 }
 
+function parsePossiblyStringifiedJson(value: unknown, maxDepth = 3): unknown {
+  let parsed: unknown = value
+
+  for (let depth = 0; depth < maxDepth && typeof parsed === 'string'; depth += 1) {
+    const trimmed = parsed.trim()
+    if (!trimmed) break
+
+    try {
+      parsed = JSON.parse(trimmed)
+    } catch {
+      break
+    }
+  }
+
+  return parsed
+}
+
+function normalizeObject(value: unknown): Record<string, unknown> {
+  const parsed = parsePossiblyStringifiedJson(value)
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+    ? parsed as Record<string, unknown>
+    : {}
+}
+
+function normalizeArray(value: unknown): unknown[] {
+  const parsed = parsePossiblyStringifiedJson(value)
+  return Array.isArray(parsed) ? parsed : []
+}
+
 async function loadSiteContent(env: Env) {
   const siteRows = await neonQuery<{
     hero: Record<string, unknown>
@@ -147,20 +176,20 @@ async function loadSiteContent(env: Env) {
   const site = siteRows[0]
 
   return {
-    hero: site?.hero,
-    about: site?.about,
-    contact: site?.contact,
-    blog: site?.blog,
-    socialLinks: site?.social_links,
-    blogPosts: site?.blog_posts,
-    sectionVisibility: site?.section_visibility,
+    hero: normalizeObject(site?.hero),
+    about: normalizeObject(site?.about),
+    contact: normalizeObject(site?.contact),
+    blog: normalizeObject(site?.blog),
+    socialLinks: normalizeArray(site?.social_links),
+    blogPosts: normalizeArray(site?.blog_posts),
+    sectionVisibility: normalizeObject(site?.section_visibility),
     photos: photos.map((photo) => ({
       id: photo.id,
       title: photo.title,
       src: photo.src,
       thumbnailSrc: photo.thumbnail_src,
-      width: photo.width,
-      height: photo.height,
+      width: Number(photo.width ?? 0),
+      height: Number(photo.height ?? 0),
       category: photo.category,
       alt: photo.alt,
       description: photo.description,
@@ -170,13 +199,13 @@ async function loadSiteContent(env: Env) {
 }
 
 async function saveSiteContent(env: Env, data: Record<string, unknown>) {
-  const hero = data.hero ?? {}
-  const about = data.about ?? {}
-  const contact = data.contact ?? {}
-  const blog = data.blog ?? {}
-  const socialLinks = Array.isArray(data.socialLinks) ? data.socialLinks : []
-  const blogPosts = Array.isArray(data.blogPosts) ? data.blogPosts : []
-  const sectionVisibility = data.sectionVisibility ?? {}
+  const hero = normalizeObject(data.hero)
+  const about = normalizeObject(data.about)
+  const contact = normalizeObject(data.contact)
+  const blog = normalizeObject(data.blog)
+  const socialLinks = normalizeArray(data.socialLinks)
+  const blogPosts = normalizeArray(data.blogPosts)
+  const sectionVisibility = normalizeObject(data.sectionVisibility)
   const photos = Array.isArray(data.photos) ? data.photos : []
 
   await neonQuery(
