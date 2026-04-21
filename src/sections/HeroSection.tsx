@@ -37,11 +37,11 @@ export default function HeroSection() {
 
       <a
         href="#portfolio"
-        className="absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-3 text-xs uppercase tracking-[0.4em] text-white/65 transition hover:text-white"
+        className="absolute bottom-6 right-6 flex flex-col items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-white/60 transition hover:text-white md:bottom-10 md:left-1/2 md:right-auto md:gap-3 md:-translate-x-1/2 md:text-xs md:tracking-[0.4em]"
         aria-label="Scroll to portfolio"
       >
         <span>{h.scrollLabel}</span>
-        <span className="animate-floatArrow text-lg">↓</span>
+        <span className="animate-floatArrow text-base md:text-lg">↓</span>
       </a>
     </section>
   )
