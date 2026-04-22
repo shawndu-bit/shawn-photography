@@ -8,6 +8,8 @@ import type { AboutContent } from '@/types'
 export default function AboutEditPage() {
   const { siteContent, saveContent } = useSiteContentContext()
   const [form, setForm] = useState<AboutContent>(siteContent.about)
+  const [uploadingPortrait, setUploadingPortrait] = useState(false)
+  const [uploadError, setUploadError] = useState('')
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -31,6 +33,47 @@ export default function AboutEditPage() {
 
   function removeParagraph(index: number) {
     set('paragraphs', form.paragraphs.filter((_, i) => i !== index))
+  }
+
+  function existingR2Key(path: string) {
+    if (!path.startsWith('/uploads/')) return ''
+    return decodeURIComponent(path.replace('/uploads/', ''))
+  }
+
+  async function uploadPortrait(file: File) {
+    try {
+      setUploadingPortrait(true)
+      setUploadError('')
+
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const existingOriginalKey = existingR2Key(form.portraitImageSrc)
+      if (existingOriginalKey) formData.append('existingOriginalKey', existingOriginalKey)
+
+      const res = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json() as {
+        ok?: boolean
+        originalUrl?: string
+        error?: string
+      }
+
+      if (!res.ok || !data.ok || !data.originalUrl) {
+        throw new Error(data.error || 'Upload failed')
+      }
+
+      set('portraitImageSrc', data.originalUrl)
+      if (!form.portraitImageAlt.trim()) {
+        set('portraitImageAlt', 'Portrait photo')
+      }
+    } catch (error) {
+      setUploadError(String(error))
+    } finally {
+      setUploadingPortrait(false)
+    }
   }
 
   async function handleSave() {
@@ -61,6 +104,45 @@ export default function AboutEditPage() {
             value={form.title}
             onChange={(e) => set('title', e.target.value)}
           />
+          <Field
+            label="肖像图片 URL"
+            value={form.portraitImageSrc}
+            onChange={(e) => set('portraitImageSrc', e.target.value)}
+            hint="可手动输入 URL，或使用下方按钮上传到 R2"
+          />
+          <div className="flex items-center gap-3">
+            <label className="inline-flex cursor-pointer items-center rounded-full border border-white/12 px-4 py-2 text-[12px] text-white/70 transition hover:border-white/30 hover:text-white">
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) uploadPortrait(file)
+                  e.currentTarget.value = ''
+                }}
+              />
+              {uploadingPortrait ? '上传中...' : '上传肖像图到 R2'}
+            </label>
+            {uploadError && (
+              <span className="text-[12px] text-red-400">{uploadError}</span>
+            )}
+          </div>
+          <Field
+            label="肖像图片 Alt 描述"
+            value={form.portraitImageAlt}
+            onChange={(e) => set('portraitImageAlt', e.target.value)}
+          />
+
+          {form.portraitImageSrc && (
+            <div className="w-fit rounded-full border border-white/10 bg-white/[0.03] p-2">
+              <img
+                src={form.portraitImageSrc}
+                alt={form.portraitImageAlt}
+                className="h-28 w-28 rounded-full object-cover object-center"
+              />
+            </div>
+          )}
 
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">

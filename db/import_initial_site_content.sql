@@ -12,6 +12,8 @@ DECLARE
   "about": {
     "eyebrow": "About Me",
     "title": "Seeking the quietest moments of the landscape",
+    "portraitImageSrc": "",
+    "portraitImageAlt": "Portrait photo of Shawn",
     "paragraphs": [
       "我专注于山地、海岸、荒野与夜景创作，以大画幅般的秩序感与留白控制，让每一张作品都像展墙上的独立叙事。",
       "网站当前以展示为主，后续可无缝扩展博客、作品管理、访客留言、商业合作表单与会员系统，并接入 Neon 与 Cloudflare R2 形成完整内容架构。"

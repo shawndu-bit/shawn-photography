@@ -44,6 +44,8 @@ export interface HeroContent {
 export interface AboutContent {
   eyebrow: string
   title: string
+  portraitImageSrc: string
+  portraitImageAlt: string
   paragraphs: string[]
 }
 
