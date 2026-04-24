@@ -1,127 +1,167 @@
-import { useEffect } from 'react'
+import { Facebook, Globe, Instagram, Mail, Youtube } from 'lucide-react'
+import { useEffect, type ComponentType } from 'react'
 import { Link } from 'react-router-dom'
+import type { SocialLink } from '@/types'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import Footer from '@/components/Footer'
 
+function keepLightTogether(title: string) {
+  return title.replace(/\sof light$/i, ' of\u00a0light')
+}
+
+const iconByPlatform: Record<string, ComponentType<{ className?: string }>> = {
+  instagram: Instagram,
+  facebook: Facebook,
+  youtube: Youtube,
+  email: Mail,
+}
+
+function getSocialIcon(link: SocialLink) {
+  const key = link.platform.trim().toLowerCase()
+  return iconByPlatform[key] ?? Globe
+}
+
+function isDisplayableLink(link: SocialLink) {
+  return link.enabled && link.href.trim().length > 0 && link.href !== '#'
+}
+
 export default function AboutPage() {
   const { siteContent } = useSiteContentContext()
-  const { about } = siteContent
+  const { about, socialLinks } = siteContent
 
-  // Scroll to top on mount
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [])
+  const bioParagraphs = about.paragraphs.filter((paragraph) => paragraph.trim().length > 0).slice(0, 2)
+  const firstBio =
+    bioParagraphs[0]
+    || 'Hi, I’m Shawn, a photographer currently based in Germany. My work focuses on natural and urban landscapes, with a particular interest in quiet light, negative space, and restrained composition.'
+  const secondBio =
+    bioParagraphs[1]
+    || 'Shaped by travels through Australia and New Zealand, my photography is drawn to places where atmosphere, distance, and stillness become part of the image. I often look for simple visual order in complex surroundings.'
+
+  const aboutWebsite =
+    'This website brings together selected work, field notes, and photography guides. It is both a personal archive and a visual space for exploring how light, place, and memory shape the way we see.'
+
+  const visibleSocials = socialLinks.filter(isDisplayableLink).slice(0, 6)
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [])
 
   return (
     <>
-      <main className="min-h-screen bg-carbon">
-        {/* ── Hero banner ────────────────────────────────── */}
-        <section className="relative flex min-h-[55vh] items-end overflow-hidden">
-          {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-carbon via-carbon/60 to-carbon" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_30%,rgba(255,255,255,0.04)_0%,transparent_70%)]" />
+      <main className="min-h-screen bg-carbon text-white">
+        <header className="fixed inset-x-0 top-0 z-50 bg-black/55 backdrop-blur-xl">
+          <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 md:px-8 lg:px-12">
+            <Link to="/" aria-label="Shawn Photography 首页" className="shrink-0">
+              <img
+                src="/logo.png"
+                alt="Shawn Photography Logo"
+                loading="lazy"
+                className="h-10 w-auto object-contain md:h-12"
+              />
+            </Link>
+            <nav>
+              <ul className="flex flex-wrap items-center justify-center gap-4 text-sm font-medium uppercase tracking-[0.18em] text-zinc-100 md:gap-6 md:text-base">
+                <li><Link to="/" className="transition hover:text-white">Home</Link></li>
+                <li><Link to="/#portfolio" className="transition hover:text-white">Portfolio</Link></li>
+                <li><Link to="/about" className="transition hover:text-white">About Me</Link></li>
+                <li><Link to="/#blog" className="transition hover:text-white">Blog</Link></li>
+                <li><Link to="/#contact" className="transition hover:text-white">Contact</Link></li>
+              </ul>
+            </nav>
+          </div>
+        </header>
 
-          <div className="relative mx-auto w-full max-w-[1200px] px-6 pb-16 pt-32 lg:px-12">
-            <p className="mb-3 text-xs uppercase tracking-[0.55em] text-white/30">
-              {about.eyebrow}
-            </p>
-            <h1 className="font-display text-5xl leading-none tracking-tight text-white sm:text-6xl lg:text-7xl">
-              {about.title}
+        <section className="relative overflow-hidden border-b border-white/8 pt-24 pb-10 md:pt-28 md:pb-12 lg:pt-32 lg:pb-14">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_55%_20%,rgba(255,255,255,0.06)_0%,transparent_65%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-carbon to-transparent" />
+
+          <div className="relative mx-auto max-w-[1200px] px-6 lg:px-12">
+            <p className="mb-4 text-xs uppercase tracking-[0.5em] text-white/35">About Me</p>
+            <h1 className="max-w-5xl text-balance font-display text-4xl leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+              {keepLightTogether(about.title)}
             </h1>
+            <p className="mt-3 text-xs uppercase tracking-[0.28em] text-white/45 sm:text-sm">
+              Based in Germany · Landscape · Urban · Nightscape
+            </p>
           </div>
         </section>
 
-        {/* ── Body ───────────────────────────────────────── */}
-        <section className="mx-auto max-w-[1200px] px-6 py-16 lg:px-12 lg:py-24">
-          <div className="grid gap-16 lg:grid-cols-[1fr_2fr]">
-            {/* Sidebar nav / decoration */}
-            <aside className="hidden lg:block">
-              <div className="sticky top-28">
-                <div className="h-px w-12 bg-white/20" />
-                <nav className="mt-8 flex flex-col gap-4">
-                  <a
-                    href="#story"
-                    className="text-sm uppercase tracking-[0.35em] text-white/35 transition hover:text-white/70"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      document.getElementById('story')?.scrollIntoView({ behavior: 'smooth' })
-                    }}
-                  >
-                    Story
-                  </a>
-                  <a
-                    href="#approach"
-                    className="text-sm uppercase tracking-[0.35em] text-white/35 transition hover:text-white/70"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      document.getElementById('approach')?.scrollIntoView({ behavior: 'smooth' })
-                    }}
-                  >
-                    Approach
-                  </a>
+        <section className="mx-auto max-w-[1200px] px-6 py-10 md:py-12 lg:px-12 lg:py-14">
+          <div className="grid gap-8 lg:grid-cols-[minmax(280px,340px)_1fr] lg:gap-12">
+            <div className="lg:sticky lg:top-24 lg:self-start">
+              {about.portraitImageSrc ? (
+                <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02]">
+                  <img
+                    src={about.portraitImageSrc}
+                    alt={about.portraitImageAlt}
+                    className="h-full w-full object-cover object-center"
+                  />
+                </div>
+              ) : (
+                <div className="aspect-[4/5] rounded-3xl border border-dashed border-white/15 bg-white/[0.01]" />
+              )}
+            </div>
+
+            <div className="space-y-7">
+              <div>
+                <p className="mb-3 text-[11px] uppercase tracking-[0.36em] text-white/38">About Shawn /</p>
+                <div className="space-y-4 text-base leading-8 text-white/72 sm:text-[17px] sm:leading-8">
+                  <p>{firstBio}</p>
+                  <p>{secondBio}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-3 text-[11px] uppercase tracking-[0.36em] text-white/38">About the Website /</p>
+                <p className="text-base leading-8 text-white/66 sm:text-[17px] sm:leading-8">{aboutWebsite}</p>
+              </div>
+
+              <div className="border-t border-white/10 pt-5">
+                <div className="flex flex-wrap items-center gap-3">
                   <Link
                     to="/#contact"
-                    className="text-sm uppercase tracking-[0.35em] text-white/35 transition hover:text-white/70"
+                    className="inline-flex items-center gap-3 rounded-full border border-white/20 px-7 py-3 text-xs uppercase tracking-[0.3em] text-white/75 transition hover:border-white/40 hover:text-white"
                   >
-                    Contact
+                    Contact Me
+                    <span aria-hidden>→</span>
                   </Link>
-                </nav>
-              </div>
-            </aside>
-
-            {/* Main paragraphs */}
-            <div id="story">
-              <div className="space-y-7">
-                {about.paragraphs.map((para, i) => (
-                  <p
-                    key={i}
-                    className={`leading-relaxed text-white/70 ${
-                      i === 0
-                        ? 'text-lg sm:text-xl'
-                        : 'text-base sm:text-[17px]'
-                    }`}
+                  <Link
+                    to="/#portfolio"
+                    className="inline-flex items-center rounded-full border border-white/12 px-6 py-3 text-xs uppercase tracking-[0.28em] text-white/62 transition hover:border-white/30 hover:text-white"
                   >
-                    {para}
-                  </p>
-                ))}
+                    View Portfolio
+                  </Link>
+                  <Link
+                    to="/"
+                    className="ml-1 text-xs uppercase tracking-[0.3em] text-white/40 transition hover:text-white/75"
+                  >
+                    Back to Home
+                  </Link>
+                </div>
+
+                {visibleSocials.length > 0 && (
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    {visibleSocials.map((link) => {
+                      const Icon = getSocialIcon(link)
+                      const isMail = link.href.startsWith('mailto:')
+
+                      return (
+                        <a
+                          key={link.id}
+                          href={link.href}
+                          aria-label={link.label}
+                          title={link.label}
+                          target={isMail ? undefined : '_blank'}
+                          rel={isMail ? undefined : 'noopener noreferrer'}
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/58 transition hover:border-white/25 hover:text-white"
+                        >
+                          <Icon className="h-4 w-4" />
+                        </a>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
-
-              {/* Divider */}
-              <div className="my-16 h-px w-full bg-white/8" />
-
-              {/* Approach block */}
-              <div id="approach">
-                <p className="mb-4 text-xs uppercase tracking-[0.5em] text-white/30">Approach</p>
-                <p className="max-w-prose text-base leading-relaxed text-white/55">
-                  Every image begins long before the shutter fires — in the stillness of waiting,
-                  in the study of light across a landscape, in the patience to let a scene reveal
-                  itself. I work with available light, minimal gear, and maximum presence.
-                </p>
-              </div>
-
-              {/* CTA */}
-              <div className="mt-16">
-                <Link
-                  to="/#contact"
-                  className="inline-flex items-center gap-3 rounded-full border border-white/20 px-7 py-3.5 text-sm uppercase tracking-[0.35em] text-white/70 transition hover:border-white/40 hover:text-white"
-                >
-                  Get in Touch
-                  <span className="text-white/40">→</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Selected work teaser ───────────────────────── */}
-        <section className="border-t border-white/8 py-16 lg:py-24">
-          <div className="mx-auto max-w-[1200px] px-6 lg:px-12">
-            <div className="flex items-end justify-between">
-              <p className="text-xs uppercase tracking-[0.5em] text-white/30">Selected Work</p>
-              <Link
-                to="/#work"
-                className="text-sm uppercase tracking-[0.35em] text-white/40 transition hover:text-white"
-              >
-                View All →
-              </Link>
             </div>
           </div>
         </section>
