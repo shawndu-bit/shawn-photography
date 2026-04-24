@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { Facebook, Globe, Instagram, Mail, Youtube } from 'lucide-react'
+import { useEffect, type ComponentType } from 'react'
 import { Link } from 'react-router-dom'
 import SiteHeader from '@/components/SiteHeader'
 import Footer from '@/components/Footer'
@@ -8,9 +9,37 @@ function keepLightTogether(title: string) {
   return title.replace(/\sof light$/i, ' of\u00a0light')
 }
 
+function keepLightTogether(title: string) {
+  return title.replace(/\sof light$/i, ' of\u00a0light')
+}
+
+const iconByPlatform: Record<string, ComponentType<{ className?: string }>> = {
+  instagram: Instagram,
+  facebook: Facebook,
+  youtube: Youtube,
+  email: Mail,
+}
+
+function getSocialIcon(link: SocialLink) {
+  const key = link.platform.trim().toLowerCase()
+  return iconByPlatform[key] ?? Globe
+}
+
+function isDisplayableLink(link: SocialLink) {
+  return link.enabled && link.href.trim().length > 0 && link.href !== '#'
+}
+
 export default function AboutPage() {
   const { siteContent } = useSiteContentContext()
-  const { about } = siteContent
+  const { about, socialLinks } = siteContent
+
+  const bioParagraphs = about.paragraphs.filter((paragraph) => paragraph.trim().length > 0).slice(0, 2)
+  const firstBio =
+    bioParagraphs[0]
+    || 'Hi, I’m Shawn, a photographer currently based in Germany. My work focuses on natural and urban landscapes, with a particular interest in quiet light, negative space, and restrained composition.'
+  const secondBio =
+    bioParagraphs[1]
+    || 'Shaped by travels through Australia and New Zealand, my photography is drawn to places where atmosphere, distance, and stillness become part of the image. I often look for simple visual order in complex surroundings.'
 
   const bioParagraphs = about.paragraphs.filter((paragraph) => paragraph.trim().length > 0).slice(0, 2)
   const firstBio =
