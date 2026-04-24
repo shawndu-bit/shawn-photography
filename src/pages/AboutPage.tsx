@@ -4,30 +4,54 @@ import { Link } from 'react-router-dom'
 import SiteHeader from '@/components/SiteHeader'
 import Footer from '@/components/Footer'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
+import { defaultSiteContent } from '@/data/siteContent'
+import type { AboutContent } from '@/types'
 
 function keepLightTogether(title: string) {
   return title.replace(/\sof light$/i, ' of\u00a0light')
 }
 
-function getAboutCopy(paragraphs: string[]) {
-  const selected = paragraphs.filter((paragraph) => paragraph.trim().length > 0).slice(0, 2)
+function getAboutCopy(about: AboutContent) {
+  const defaults = defaultSiteContent.about.page
+  const page = about.page
+  const fallbackBio = about.paragraphs.filter((paragraph) => paragraph.trim().length > 0).slice(0, 2)
+  const pageBio = (page?.bioParagraphs ?? []).filter((paragraph) => paragraph.trim().length > 0)
+  const selected = pageBio.length > 0 ? pageBio : fallbackBio
 
   return {
+    eyebrow: page?.eyebrow?.trim() || about.eyebrow || defaults?.eyebrow || 'About Me',
+    title: page?.title?.trim() || about.title || defaults?.title || 'About Me',
+    subtitle:
+      page?.subtitle?.trim()
+      || defaults?.subtitle
+      || 'Based in Germany · Landscape · Urban · Nightscape',
+    bioHeading: page?.bioHeading?.trim() || defaults?.bioHeading || 'About Shawn /',
     firstBio:
       selected[0]
+      || defaults?.bioParagraphs?.[0]
       || 'Hi, I’m Shawn, a photographer currently based in Germany. My work focuses on natural and urban landscapes, with a particular interest in quiet light, negative space, and restrained composition.',
     secondBio:
       selected[1]
+      || defaults?.bioParagraphs?.[1]
       || 'Shaped by travels through Australia and New Zealand, my photography is drawn to places where atmosphere, distance, and stillness become part of the image. I often look for simple visual order in complex surroundings.',
-    aboutWebsite:
-      'This website brings together selected work, field notes, and photography guides. It is both a personal archive and a visual space for exploring how light, place, and memory shape the way we see.',
+    websiteHeading: page?.websiteHeading?.trim() || defaults?.websiteHeading || 'About the Website /',
+    websiteParagraph:
+      page?.websiteParagraph?.trim()
+      || defaults?.websiteParagraph
+      || 'This website brings together selected work, field notes, and photography guides. It is both a personal archive and a visual space for exploring how light, place, and memory shape the way we see.',
+    contactButtonText: page?.contactButtonText?.trim() || defaults?.contactButtonText || 'Contact Me',
+    contactButtonLink: page?.contactButtonLink?.trim() || defaults?.contactButtonLink || '/#contact',
+    portfolioButtonText: page?.portfolioButtonText?.trim() || defaults?.portfolioButtonText || 'View Portfolio',
+    portfolioButtonLink: page?.portfolioButtonLink?.trim() || defaults?.portfolioButtonLink || '/#portfolio',
+    backLinkText: page?.backLinkText?.trim() || defaults?.backLinkText || 'Back to Home',
+    backLinkUrl: page?.backLinkUrl?.trim() || defaults?.backLinkUrl || '/',
   }
 }
 
 export default function AboutPage() {
   const { siteContent } = useSiteContentContext()
   const { about } = siteContent
-  const { firstBio, secondBio, aboutWebsite } = getAboutCopy(about.paragraphs)
+  const copy = getAboutCopy(about)
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -43,12 +67,12 @@ export default function AboutPage() {
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-carbon to-transparent" />
 
           <div className="relative mx-auto max-w-[1200px] px-6 lg:px-12">
-            <p className="mb-3 text-xs uppercase tracking-[0.5em] text-white/35">About Me</p>
+            <p className="mb-3 text-xs uppercase tracking-[0.5em] text-white/35">{copy.eyebrow}</p>
             <h1 className="max-w-5xl text-balance font-display text-4xl leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-              {keepLightTogether(about.title)}
+              {keepLightTogether(copy.title)}
             </h1>
             <p className="mt-2 text-xs uppercase tracking-[0.28em] text-white/45 sm:text-sm">
-              Based in Germany · Landscape · Urban · Nightscape
+              {copy.subtitle}
             </p>
           </div>
         </section>
@@ -71,38 +95,38 @@ export default function AboutPage() {
 
             <div className="space-y-5">
               <div>
-                <p className="mb-2 text-[11px] uppercase tracking-[0.36em] text-white/38">About Shawn /</p>
+                <p className="mb-2 text-[11px] uppercase tracking-[0.36em] text-white/38">{copy.bioHeading}</p>
                 <div className="space-y-3 text-base leading-7 text-white/72 sm:text-[17px] sm:leading-8">
-                  <p>{firstBio}</p>
-                  <p>{secondBio}</p>
+                  <p>{copy.firstBio}</p>
+                  <p>{copy.secondBio}</p>
                 </div>
               </div>
 
               <div>
-                <p className="mb-2 text-[11px] uppercase tracking-[0.36em] text-white/38">About the Website /</p>
-                <p className="text-base leading-7 text-white/66 sm:text-[17px] sm:leading-8">{aboutWebsite}</p>
+                <p className="mb-2 text-[11px] uppercase tracking-[0.36em] text-white/38">{copy.websiteHeading}</p>
+                <p className="text-base leading-7 text-white/66 sm:text-[17px] sm:leading-8">{copy.websiteParagraph}</p>
               </div>
 
               <div className="border-t border-white/10 pt-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <Link
-                    to="/#contact"
+                    to={copy.contactButtonLink}
                     className="inline-flex items-center gap-3 rounded-full border border-white/20 px-7 py-3 text-xs uppercase tracking-[0.3em] text-white/75 transition hover:border-white/40 hover:text-white"
                   >
-                    Contact Me
+                    {copy.contactButtonText}
                     <span aria-hidden>→</span>
                   </Link>
                   <Link
-                    to="/#portfolio"
+                    to={copy.portfolioButtonLink}
                     className="inline-flex items-center rounded-full border border-white/12 px-6 py-3 text-xs uppercase tracking-[0.28em] text-white/62 transition hover:border-white/30 hover:text-white"
                   >
-                    View Portfolio
+                    {copy.portfolioButtonText}
                   </Link>
                   <Link
-                    to="/"
+                    to={copy.backLinkUrl}
                     className="ml-1 text-xs uppercase tracking-[0.3em] text-white/40 transition hover:text-white/75"
                   >
-                    Back to Home
+                    {copy.backLinkText}
                   </Link>
                 </div>
               </div>
