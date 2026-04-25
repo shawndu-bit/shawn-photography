@@ -17,20 +17,45 @@ interface RouterContextValue {
 }
 
 const RouterContext = createContext<RouterContextValue | null>(null)
+const ParamsContext = createContext<Record<string, string>>({})
 
 function normalizePath(path: string) {
   if (!path) return '/'
-  if (path.length > 1 && path.endsWith('/')) return path.slice(0, -1)
-  return path
+
+  let pathname = path
+  try {
+    pathname = new URL(path, window.location.origin).pathname
+  } catch {
+    pathname = path
+  }
+
+  if (pathname.length > 1 && pathname.endsWith('/')) return pathname.slice(0, -1)
+  return pathname
 }
 
 function matchPath(routePath: string, pathname: string) {
-  if (routePath === '*') return true
-  if (routePath.endsWith('/*')) {
-    const base = routePath.slice(0, -2)
-    return pathname === base || pathname.startsWith(`${base}/`)
+  if (routePath === '*') return { matched: true, params: {} as Record<string, string> }
+
+  const routeSegments = normalizePath(routePath).split('/')
+  const pathSegments = normalizePath(pathname).split('/')
+
+  if (routeSegments.length !== pathSegments.length) return { matched: false, params: {} as Record<string, string> }
+
+  const params: Record<string, string> = {}
+
+  for (let i = 0; i < routeSegments.length; i += 1) {
+    const routeSegment = routeSegments[i]
+    const pathSegment = pathSegments[i]
+
+    if (routeSegment.startsWith(':')) {
+      params[routeSegment.slice(1)] = decodeURIComponent(pathSegment)
+      continue
+    }
+
+    if (routeSegment !== pathSegment) return { matched: false, params: {} as Record<string, string> }
   }
-  return routePath === pathname
+
+  return { matched: true, params }
 }
 
 export function BrowserRouter({ children }: { children: ReactNode }) {
@@ -78,6 +103,10 @@ export function useNavigate() {
   return (to: string, opts?: { replace?: boolean }) => ctx.navigate(to, opts)
 }
 
+export function useParams() {
+  return useContext(ParamsContext)
+}
+
 export function Route(_: { path: string; element: ReactElement }) {
   return null
 }
@@ -85,14 +114,19 @@ export function Route(_: { path: string; element: ReactElement }) {
 export function Routes({ children }: { children: ReactNode }) {
   const { pathname } = useLocation()
 
-  const route = Children.toArray(children).find((child) => {
+  const routeEntry = Children.toArray(children).find((child) => {
     if (!isValidElement(child)) return false
     const path = (child.props as { path?: string }).path
-    return typeof path === 'string' && matchPath(path, pathname)
-  }) as ReactElement<{ element: ReactElement }> | undefined
+    if (typeof path !== 'string') return false
+    return matchPath(path, pathname).matched
+  }) as ReactElement<{ path: string; element: ReactElement }> | undefined
 
-  return route?.props.element ?? null
+  if (!routeEntry) return null
+
+  const params = matchPath(routeEntry.props.path, pathname).params
+  return <ParamsContext.Provider value={params}>{routeEntry.props.element}</ParamsContext.Provider>
 }
+
 
 export function Navigate({ to, replace = false }: { to: string; replace?: boolean }) {
   const navigate = useNavigate()
@@ -135,6 +169,7 @@ export function Link({ to, onClick, className, ...props }: LinkProps) {
         onClick?.(e)
         if (e.defaultPrevented) return
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+        if (/^(mailto:|tel:|https?:)/i.test(to)) return
         e.preventDefault()
         navigate(to)
       }}

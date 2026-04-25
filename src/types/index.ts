@@ -87,16 +87,33 @@ export interface ContactContent {
   email: string
 }
 
+export interface BlogContentCta {
+  primaryText: string
+  primaryHref: string
+  secondaryText: string
+  secondaryHref: string
+}
+
 export interface BlogContent {
   eyebrow: string
   title: string
+  subtitle: string
+  cta: BlogContentCta
 }
 
 export interface BlogPost {
   id: string
-  category: string
   title: string
+  slug: string
   excerpt: string
+  coverImage: string
+  coverImageAlt: string
+  content: string
+  category: string
+  published: boolean
+  featuredOnHomepage: boolean
+  publishedAt: string
+  updatedAt: string
 }
 
 export interface SiteSectionVisibility {
