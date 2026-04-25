@@ -18,6 +18,25 @@ export const defaultSiteContent: SiteContent = {
       '我专注于山地、海岸、荒野与夜景创作，以大画幅般的秩序感与留白控制，让每一张作品都像展墙上的独立叙事。',
       '网站当前以展示为主，后续可无缝扩展博客、作品管理、访客留言、商业合作表单与会员系统，并接入 Neon 与 Cloudflare R2 形成完整内容架构。',
     ],
+    page: {
+      eyebrow: 'About Me',
+      title: 'Seeking the quietest moments of the landscape',
+      subtitle: 'Based in Germany · Landscape · Urban · Nightscape',
+      bioHeading: 'About Shawn /',
+      bioParagraphs: [
+        'Hi, I’m Shawn, a photographer currently based in Germany. My work focuses on natural and urban landscapes, with a particular interest in quiet light, negative space, and restrained composition.',
+        'Shaped by travels through Australia and New Zealand, my photography is drawn to places where atmosphere, distance, and stillness become part of the image. I often look for simple visual order in complex surroundings.',
+      ],
+      websiteHeading: 'About the Website /',
+      websiteParagraph:
+        'This website brings together selected work, field notes, and photography guides. It is both a personal archive and a visual space for exploring how light, place, and memory shape the way we see.',
+      contactButtonText: 'Contact Me',
+      contactButtonLink: '/#contact',
+      portfolioButtonText: 'View Portfolio',
+      portfolioButtonLink: '/#portfolio',
+      backLinkText: 'Back to Home',
+      backLinkUrl: '/',
+    },
   },
   contact: {
     eyebrow: 'Contact',
