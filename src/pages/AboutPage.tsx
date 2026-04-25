@@ -80,7 +80,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-[1200px] px-6 py-7 md:py-8 lg:px-12 lg:py-10">
+        <section className="mx-auto max-w-[1200px] px-6 pt-7 pb-12 md:pt-8 md:pb-16 lg:px-12 lg:pt-10 lg:pb-20">
           <div className="grid gap-6 lg:grid-cols-[minmax(280px,340px)_1fr] lg:gap-10">
             <div className="lg:sticky lg:top-24 lg:self-start">
               {about.portraitImageSrc ? (
