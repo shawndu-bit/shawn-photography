@@ -1,5 +1,6 @@
 import type { SiteContent } from '@/types'
 import { defaultSiteContent } from '@/data/siteContent'
+import { normalizeBlogPosts, normalizeBlogSettings } from '@/lib/blog'
 
 export const LEGACY_STORAGE_KEY = 'shawn-photography-site-content'
 
@@ -50,12 +51,9 @@ export function mergeSiteContent(parsed: Partial<SiteContent>): SiteContent {
       ...defaultSiteContent.contact,
       ...parsed.contact,
     },
-    blog: {
-      ...defaultSiteContent.blog,
-      ...parsed.blog,
-    },
+    blog: normalizeBlogSettings(parsed.blog, defaultSiteContent.blog),
     socialLinks: parsed.socialLinks ?? defaultSiteContent.socialLinks,
-    blogPosts: parsed.blogPosts ?? defaultSiteContent.blogPosts,
+    blogPosts: normalizeBlogPosts(parsed.blogPosts, defaultSiteContent.blogPosts),
     photos: mergedPhotos,
     sectionVisibility: {
       ...defaultSiteContent.sectionVisibility,
