@@ -58,8 +58,9 @@ export default function MediaLibraryPage() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [usageFilter, setUsageFilter] = useState('all')
+  const [uploadedFromFilter, setUploadedFromFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState<'active' | 'archived'>('active')
   const [expandedAssetId, setExpandedAssetId] = useState<string | null>(null)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -73,9 +74,7 @@ export default function MediaLibraryPage() {
       setError('')
 
       const params = new URLSearchParams()
-      if (usageFilter !== 'all') params.set('usageType', usageFilter)
-      if (categoryFilter !== 'all') params.set('category', categoryFilter)
-      if (statusFilter !== 'all') params.set('status', statusFilter)
+      params.set('status', statusFilter)
 
       const url = `/api/admin/media-assets${params.toString() ? `?${params.toString()}` : ''}`
       const res = await fetch(url, { method: 'GET' })
@@ -115,7 +114,7 @@ export default function MediaLibraryPage() {
   useEffect(() => {
     void loadAssets()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [usageFilter, categoryFilter, statusFilter])
+  }, [statusFilter])
 
   const usageOptions = useMemo(() => {
     const set = new Set<string>()
@@ -129,10 +128,19 @@ export default function MediaLibraryPage() {
     return ['all', ...Array.from(set).sort()]
   }, [assets])
 
+  const uploadedFromOptions = useMemo(() => {
+    const set = new Set<string>()
+    for (const asset of assets) set.add(asset.uploadedFrom || 'unknown')
+    return ['all', ...Array.from(set).sort()]
+  }, [assets])
+
   const filteredAssets = useMemo(() => {
     const query = search.trim().toLowerCase()
-    if (!query) return assets
     return assets.filter((asset) => {
+      if (usageFilter !== 'all' && (asset.usageType || 'general') !== usageFilter) return false
+      if (uploadedFromFilter !== 'all' && (asset.uploadedFrom || 'unknown') !== uploadedFromFilter) return false
+      if (categoryFilter !== 'all' && (asset.category || 'general') !== categoryFilter) return false
+      if (!query) return true
       const stack = [
         asset.title || '',
         asset.filename || '',
@@ -141,7 +149,7 @@ export default function MediaLibraryPage() {
       ].join('\n').toLowerCase()
       return stack.includes(query)
     })
-  }, [assets, search])
+  }, [assets, search, usageFilter, uploadedFromFilter, categoryFilter])
 
   function updateDraft(id: string, key: keyof AssetDraft, value: string) {
     setDrafts((prev) => ({
@@ -189,6 +197,35 @@ export default function MediaLibraryPage() {
       await loadAssets()
     } catch (saveError) {
       setError(String(saveError))
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  async function archiveAsset(asset: MediaAsset) {
+    if (asset.status === 'archived') return
+
+    const confirmed = window.confirm(
+      'Archive this asset? It will be hidden from the default Active view but the R2 file will NOT be deleted.',
+    )
+    if (!confirmed) return
+
+    try {
+      setSavingId(asset.id)
+      setError('')
+
+      const res = await fetch(`/api/admin/media-assets/${asset.id}`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ status: 'archived' }),
+      })
+      const data = await res.json() as { ok?: boolean; error?: string }
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || 'Failed to archive media asset')
+      }
+      await loadAssets()
+    } catch (archiveError) {
+      setError(String(archiveError))
     } finally {
       setSavingId(null)
     }
@@ -285,34 +322,66 @@ export default function MediaLibraryPage() {
           </div>
         </div>
 
-        <div className="mb-5 grid gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4 md:grid-cols-4">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search title / filename / alt / description..."
-            className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-white/25"
-          />
-          <select
-            value={usageFilter}
-            onChange={(e) => setUsageFilter(e.target.value)}
-            className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-white/25"
-          >
-            {usageOptions.map((item) => <option key={item} value={item} className="bg-[#1a1a1a]">{item}</option>)}
-          </select>
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-white/25"
-          >
-            {categoryOptions.map((item) => <option key={item} value={item} className="bg-[#1a1a1a]">{item}</option>)}
-          </select>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-white/25"
-          >
-            {['all', 'active', 'archived'].map((item) => <option key={item} value={item} className="bg-[#1a1a1a]">{item}</option>)}
-          </select>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[12px] text-white/50">
+            {filteredAssets.length} assets shown
+          </p>
+          <p className="text-[11px] text-white/35">
+            Archive only hides metadata from active view. It does not delete files from R2.
+          </p>
+        </div>
+
+        <div className="mb-5 grid gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4 md:grid-cols-5">
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-[0.28em] text-white/45">Search</label>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Title / filename / alt / description"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-white/25"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-[0.28em] text-white/45">Usage Type</label>
+            <select
+              value={usageFilter}
+              onChange={(e) => setUsageFilter(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-white/25"
+            >
+              {usageOptions.map((item) => <option key={item} value={item} className="bg-[#1a1a1a]">{item === 'all' ? 'All usage types' : item}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-[0.28em] text-white/45">Uploaded From</label>
+            <select
+              value={uploadedFromFilter}
+              onChange={(e) => setUploadedFromFilter(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-white/25"
+            >
+              {uploadedFromOptions.map((item) => <option key={item} value={item} className="bg-[#1a1a1a]">{item === 'all' ? 'All sources' : item}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-[0.28em] text-white/45">Category</label>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-white/25"
+            >
+              {categoryOptions.map((item) => <option key={item} value={item} className="bg-[#1a1a1a]">{item === 'all' ? 'All categories' : item}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-[0.28em] text-white/45">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as 'active' | 'archived')}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-white/25"
+            >
+              <option value="active" className="bg-[#1a1a1a]">Active</option>
+              <option value="archived" className="bg-[#1a1a1a]">Archived</option>
+            </select>
+          </div>
         </div>
 
         {copyHint && <p className="mb-4 text-[12px] text-green-400">{copyHint}</p>}
@@ -322,41 +391,41 @@ export default function MediaLibraryPage() {
           <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.015] px-6 py-10 text-center text-sm text-white/45">
             No media assets loaded yet. Click Refresh to load current assets.
           </div>
+        ) : filteredAssets.length === 0 && !loading ? (
+          <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.015] px-6 py-10 text-center text-sm text-white/45">
+            No assets match the current filters. Try adjusting search or filter options.
+          </div>
         ) : (
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {filteredAssets.map((asset) => {
               const draft = drafts[asset.id]
               const expanded = expandedAssetId === asset.id
               return (
-                <article key={asset.id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-                  <div className="flex gap-4">
-                    <div className="h-28 w-28 flex-shrink-0 overflow-hidden rounded-xl bg-white/[0.05]">
-                      {asset.thumbnailUrl || asset.originalUrl ? (
-                        <img
-                          src={asset.thumbnailUrl || asset.originalUrl}
-                          alt={asset.alt || asset.title || asset.filename || 'media'}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-[11px] text-white/30">No image</div>
-                      )}
+                <article key={asset.id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-3">
+                  <div className="aspect-square overflow-hidden rounded-xl bg-white/[0.05]">
+                    {asset.thumbnailUrl || asset.originalUrl ? (
+                      <img
+                        src={asset.thumbnailUrl || asset.originalUrl}
+                        alt={asset.alt || asset.title || asset.filename || 'media'}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-[11px] text-white/30">No image</div>
+                    )}
+                  </div>
+                  <div className="mt-3 min-w-0 space-y-2">
+                    <p className="truncate text-sm text-white">{asset.title?.trim() || asset.filename || 'Untitled asset'}</p>
+                    <div className="flex flex-wrap gap-1.5 text-[10px]">
+                      <span className="rounded-full border border-white/15 px-2 py-0.5 text-white/65">{asset.usageType || 'general'}</span>
+                      <span className="rounded-full border border-white/15 px-2 py-0.5 text-white/65">{asset.category || 'general'}</span>
+                      <span className="rounded-full border border-white/15 px-2 py-0.5 text-white/65">{asset.status || 'active'}</span>
                     </div>
-                    <div className="min-w-0 flex-1 space-y-1.5 text-sm text-white/70">
-                      <p className="truncate text-white">{asset.title?.trim() || asset.filename || 'Untitled asset'}</p>
-                      <p className="truncate text-white/50">{asset.filename || '—'}</p>
-                      <p className="text-[12px] text-white/45">usage: {asset.usageType || 'general'}</p>
-                      <p className="text-[12px] text-white/45">from: {asset.uploadedFrom || 'unknown'}</p>
-                      <p className="text-[12px] text-white/45">category: {asset.category || 'general'}</p>
-                      <p className="text-[12px] text-white/45">status: {asset.status || 'active'}</p>
-                      <p className="text-[12px] text-white/45">
-                        {asset.width && asset.height ? `${asset.width} × ${asset.height}` : 'dimensions: —'}
-                      </p>
-                      <p className="text-[12px] text-white/45">size: {formatFileSize(asset.fileSizeBytes)}</p>
-                      <p className="text-[12px] text-white/45">created: {formatDate(asset.createdAt)}</p>
-                    </div>
+                    <p className="truncate text-[11px] text-white/40" title={asset.uploadedFrom || 'unknown'}>
+                      source: {asset.uploadedFrom || 'unknown'}
+                    </p>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       onClick={() => void copyToClipboard('Original URL', asset.originalUrl)}
                       className="rounded-full border border-white/12 px-3 py-1.5 text-[11px] text-white/65 transition hover:border-white/30 hover:text-white"
@@ -375,10 +444,25 @@ export default function MediaLibraryPage() {
                     >
                       {expanded ? 'Close edit' : 'Edit'}
                     </button>
+                    {asset.status !== 'archived' && (
+                      <button
+                        onClick={() => void archiveAsset(asset)}
+                        disabled={savingId === asset.id}
+                        className="rounded-full border border-amber-500/30 px-3 py-1.5 text-[11px] text-amber-200/80 transition hover:border-amber-400/50 hover:text-amber-100 disabled:opacity-50"
+                      >
+                        Archive
+                      </button>
+                    )}
                   </div>
 
                   {expanded && draft && (
                     <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
+                      <div className="space-y-1 text-[12px] text-white/45">
+                        <p>Filename: {asset.filename || '—'}</p>
+                        <p>Dimensions: {asset.width && asset.height ? `${asset.width} × ${asset.height}` : '—'}</p>
+                        <p>Size: {formatFileSize(asset.fileSizeBytes)}</p>
+                        <p>Created: {formatDate(asset.createdAt)}</p>
+                      </div>
                       <div className="grid gap-3 md:grid-cols-2">
                         <input
                           value={draft.title}
