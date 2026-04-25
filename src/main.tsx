@@ -20,7 +20,7 @@ import PhotosPage from './admin/pages/PhotosPage';
 import VisibilityPage from './admin/pages/VisibilityPage';
 import PortfolioPlaceholderPage from './admin/pages/PortfolioPlaceholderPage';
 import BlogPagePlaceholder from './admin/pages/BlogPagePlaceholder';
-import PhotosLibraryPlaceholderPage from './admin/pages/PhotosLibraryPlaceholderPage';
+import MediaLibraryPage from './admin/pages/MediaLibraryPage';
 import './index.css';
 
 function AppProviders({ children }: { children: React.ReactNode }) {
@@ -54,11 +54,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/admin/blog/new" element={<BlogPostEditorPage mode="new" />} />
           <Route path="/admin/blog/:id/edit" element={<BlogPostEditorPage mode="edit" />} />
           <Route path="/admin/contact" element={<ContactEditPage />} />
-          <Route path="/admin/photos" element={<PhotosPage />} />
+          <Route path="/admin/photos" element={<MediaLibraryPage />} />
+          <Route path="/admin/photos-preview" element={<PhotosPage />} />
           <Route path="/admin/visibility" element={<VisibilityPage />} />
           <Route path="/admin/portfolio" element={<PortfolioPlaceholderPage />} />
           <Route path="/admin/blog-page" element={<BlogPagePlaceholder />} />
-          <Route path="/admin/photos-library" element={<PhotosLibraryPlaceholderPage />} />
+          <Route path="/admin/photos-library" element={<MediaLibraryPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

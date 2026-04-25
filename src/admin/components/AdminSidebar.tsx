@@ -12,19 +12,19 @@ const links: TopLevelLink[] = [
   { to: '/admin', label: 'Dashboard 总览', icon: '⊞' },
   {
     to: '/admin/homepage',
-    label: 'Homepage 首页',
-    icon: '⌂',
-    children: [
-      { to: '/admin/hero', label: 'Hero 首屏' },
-      { to: '/admin/photos', label: 'Portfolio Preview' },
-      { to: '/admin/contact', label: 'Contact 联系' },
-      { to: '/admin/visibility', label: 'Settings 设置' },
-    ],
-  },
+      label: 'Homepage 首页',
+      icon: '⌂',
+      children: [
+        { to: '/admin/hero', label: 'Hero 首屏' },
+        { to: '/admin/photos-preview', label: 'Portfolio Preview' },
+        { to: '/admin/contact', label: 'Contact 联系' },
+        { to: '/admin/visibility', label: 'Settings 设置' },
+      ],
+    },
   { to: '/admin/about', label: 'About 关于', icon: '○' },
   { to: '/admin/portfolio', label: 'Portfolio 作品集', icon: '▦' },
   { to: '/admin/blog', label: 'Blog 日志', icon: '≡' },
-  { to: '/admin/photos-library', label: 'Photos 图片管理', icon: '▢' },
+  { to: '/admin/photos', label: 'Photos 图片管理', icon: '▢' },
 ]
 
 export default function AdminSidebar() {

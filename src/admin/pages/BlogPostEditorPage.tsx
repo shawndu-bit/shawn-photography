@@ -71,9 +71,15 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
     setDirty(true)
   }
 
-  async function uploadImage(file: File) {
+  async function uploadImage(
+    file: File,
+    metadata: { usageType: string; uploadedFrom: string },
+  ) {
     const formData = new FormData()
     formData.append('file', file)
+    formData.append('usageType', metadata.usageType)
+    formData.append('uploadedFrom', metadata.uploadedFrom)
+    formData.append('category', 'general')
     const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData })
     const data = (await res.json()) as { ok?: boolean; originalUrl?: string; error?: string }
     if (!res.ok || !data.ok || !data.originalUrl) {
@@ -85,7 +91,10 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
   async function uploadCoverImage(file: File) {
     try {
       setUploadingCover(true)
-      const imageUrl = await uploadImage(file)
+      const imageUrl = await uploadImage(file, {
+        usageType: 'blog_cover',
+        uploadedFrom: 'admin_blog',
+      })
       setField('coverImage', imageUrl)
     } finally {
       setUploadingCover(false)
@@ -124,7 +133,10 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
   async function uploadInlineImage(file: File) {
     try {
       setUploadingInlineImage(true)
-      const imageUrl = await uploadImage(file)
+      const imageUrl = await uploadImage(file, {
+        usageType: 'blog_inline',
+        uploadedFrom: 'admin_blog',
+      })
       insertMarkdownImageAtCursor(imageUrl, inlineImageAlt)
     } finally {
       setUploadingInlineImage(false)
