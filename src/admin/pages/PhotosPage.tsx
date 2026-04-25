@@ -144,7 +144,8 @@ export default function PhotosPage() {
         <div className="mb-8 flex items-end justify-between">
           <div>
             <p className="mb-1 text-[11px] uppercase tracking-[0.45em] text-white/35">编辑</p>
-            <h1 className="font-display text-3xl text-white">图片管理</h1>
+            <h1 className="font-display text-3xl text-white">Portfolio Preview</h1>
+            <p className="mt-2 text-sm text-white/55">Homepage portfolio preview images editor (not full Photos library).</p>
           </div>
           <button
             onClick={addPhoto}

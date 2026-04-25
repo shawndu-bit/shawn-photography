@@ -73,6 +73,7 @@ export const defaultSiteContent: SiteContent = {
   blog: {
     eyebrow: 'Blog',
     title: 'Journal & Notes',
+    subtitle: 'Field notes, stories, and process from the road.',
   },
   socialLinks: [
     { id: 'instagram', label: 'Instagram', platform: 'instagram', href: '#', enabled: true },
@@ -88,21 +89,48 @@ export const defaultSiteContent: SiteContent = {
   blogPosts: [
     {
       id: '1',
-      category: 'Field Notes',
       title: '暴风雪前的蓝调窗口',
+      slug: 'blue-hour-before-the-storm',
       excerpt: '记录在高海拔等待天气裂开的一小时，以及如何判断山脊上最后一束可用侧光。',
+      coverImage: '/uploads/photos%2F1776646075264-mmexport1684750561658.jpg',
+      coverImageAlt: 'Snow mountain ridge before a storm at blue hour',
+      content:
+        '## 在风暴前等待\n\n有时最值得按下快门的十分钟，出现在最漫长的等待之后。\n\n- 提前看云层裂口\n- 控制曝光保留高光\n- 让前景保持克制\n\n> 你并不是在拍风景，而是在拍光线抵达的那一刻。',
+      category: 'Field Notes',
+      published: true,
+      featuredOnHomepage: true,
+      publishedAt: '2026-02-02T08:30:00.000Z',
+      updatedAt: '2026-02-02T08:30:00.000Z',
     },
     {
       id: '2',
-      category: 'Gear',
       title: '长曝与海岸线构图方法',
+      slug: 'long-exposure-coastline-composition',
       excerpt: '关于 ND 镜、快门时长、前景节奏，以及如何避免“平滑海面”变成没有信息量的空白。',
+      coverImage: '/uploads/photos%2F1776645553403-dsc_5823.jpg',
+      coverImageAlt: 'Rocky coastline in long exposure at dusk',
+      content:
+        '## 海边长曝不是把海抹平\n\n真正的重点，是让结构更清晰。\n\n1. 先确定地平线层次\n2. 再决定快门时间\n3. 最后检查前景节奏',
+      category: 'Gear',
+      published: true,
+      featuredOnHomepage: true,
+      publishedAt: '2026-01-20T06:00:00.000Z',
+      updatedAt: '2026-01-25T06:00:00.000Z',
     },
     {
       id: '3',
-      category: 'Travel',
       title: '冰岛冬季路线初稿',
+      slug: 'iceland-winter-photo-route-draft',
       excerpt: '从追光路线、天气窗口到住宿密度，整理一套更适合摄影师而不是游客的行程逻辑。',
+      coverImage: '/uploads/photos%2F1776644908691-du0_5688.jpg',
+      coverImageAlt: 'Icelandic glacier route in winter light',
+      content:
+        '## 路线设计的核心\n\n把机动空间留给天气。\n\n![Iceland glacier](/uploads/photos%2F1776644908691-du0_5688.jpg)\n\n更多细节会在下一篇继续。',
+      category: 'Travel',
+      published: false,
+      featuredOnHomepage: false,
+      publishedAt: '2026-03-01T08:00:00.000Z',
+      updatedAt: '2026-03-05T09:00:00.000Z',
     },
   ],
   photos: [
