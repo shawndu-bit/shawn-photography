@@ -4,12 +4,13 @@ import Field from '@/admin/components/ui/Field'
 import SaveBar from '@/admin/components/ui/SaveBar'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import { defaultSiteContent } from '@/data/siteContent'
-import type { AboutContent, AboutPageContent } from '@/types'
+import type { AboutContent, AboutPageContent, AboutPageGear } from '@/types'
 
 export default function AboutEditPage() {
   const { siteContent, saveContent } = useSiteContentContext()
   const [form, setForm] = useState<AboutContent>(siteContent.about)
   const [uploadingPortrait, setUploadingPortrait] = useState(false)
+  const [uploadingGearIndex, setUploadingGearIndex] = useState<number | null>(null)
   const [uploadError, setUploadError] = useState('')
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -41,6 +42,11 @@ export default function AboutEditPage() {
       ...defaultSiteContent.about.page,
       ...content.page,
       bioParagraphs: content.page?.bioParagraphs ?? defaultSiteContent.about.page?.bioParagraphs ?? [],
+      gear: {
+        ...defaultSiteContent.about.page?.gear,
+        ...content.page?.gear,
+        items: content.page?.gear?.items ?? defaultSiteContent.about.page?.gear?.items ?? [],
+      },
     } as AboutPageContent
   }
 
@@ -76,9 +82,81 @@ export default function AboutEditPage() {
     setPage('bioParagraphs', current.bioParagraphs.filter((_, i) => i !== index))
   }
 
+  function ensureGear(content: AboutContent): AboutPageGear {
+    const page = ensurePage(content)
+    return {
+      ...defaultSiteContent.about.page?.gear,
+      ...page.gear,
+      items: page.gear?.items ?? defaultSiteContent.about.page?.gear?.items ?? [],
+    } as AboutPageGear
+  }
+
+  function setGear<K extends keyof AboutPageGear>(key: K, val: AboutPageGear[K]) {
+    const current = ensureGear(form)
+    setPage('gear', {
+      ...current,
+      [key]: val,
+    })
+  }
+
+  function setGearItem(index: number, key: 'name' | 'description' | 'imageUrl' | 'imageAlt', value: string) {
+    const current = ensureGear(form)
+    const next = [...current.items]
+    const target = next[index]
+
+    if (!target) return
+
+    next[index] = {
+      ...target,
+      [key]: value,
+    }
+    setGear('items', next)
+  }
+
+  function addGearItem() {
+    const current = ensureGear(form)
+    setGear('items', [
+      ...current.items,
+      {
+        id: `gear-${Date.now()}`,
+        name: '',
+        description: '',
+        imageUrl: '',
+        imageAlt: '',
+      },
+    ])
+  }
+
+  function removeGearItem(index: number) {
+    const current = ensureGear(form)
+    setGear('items', current.items.filter((_, i) => i !== index))
+  }
+
   function existingR2Key(path: string) {
     if (!path.startsWith('/uploads/')) return ''
     return decodeURIComponent(path.replace('/uploads/', ''))
+  }
+
+  async function uploadToR2(file: File, existingOriginalKey = '') {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (existingOriginalKey) formData.append('existingOriginalKey', existingOriginalKey)
+
+    const res = await fetch('/api/admin/upload-image', {
+      method: 'POST',
+      body: formData,
+    })
+    const data = await res.json() as {
+      ok?: boolean
+      originalUrl?: string
+      error?: string
+    }
+
+    if (!res.ok || !data.ok || !data.originalUrl) {
+      throw new Error(data.error || 'Upload failed')
+    }
+
+    return data.originalUrl
   }
 
   async function uploadPortrait(file: File) {
@@ -86,27 +164,10 @@ export default function AboutEditPage() {
       setUploadingPortrait(true)
       setUploadError('')
 
-      const formData = new FormData()
-      formData.append('file', file)
-
       const existingOriginalKey = existingR2Key(form.portraitImageSrc)
-      if (existingOriginalKey) formData.append('existingOriginalKey', existingOriginalKey)
+      const originalUrl = await uploadToR2(file, existingOriginalKey)
 
-      const res = await fetch('/api/admin/upload-image', {
-        method: 'POST',
-        body: formData,
-      })
-      const data = await res.json() as {
-        ok?: boolean
-        originalUrl?: string
-        error?: string
-      }
-
-      if (!res.ok || !data.ok || !data.originalUrl) {
-        throw new Error(data.error || 'Upload failed')
-      }
-
-      set('portraitImageSrc', data.originalUrl)
+      set('portraitImageSrc', originalUrl)
       if (!form.portraitImageAlt.trim()) {
         set('portraitImageAlt', 'Portrait photo')
       }
@@ -114,6 +175,27 @@ export default function AboutEditPage() {
       setUploadError(String(error))
     } finally {
       setUploadingPortrait(false)
+    }
+  }
+
+  async function uploadGearImage(index: number, file: File) {
+    try {
+      setUploadingGearIndex(index)
+      setUploadError('')
+
+      const gear = ensureGear(form)
+      const target = gear.items[index]
+      const existingOriginalKey = target ? existingR2Key(target.imageUrl) : ''
+      const originalUrl = await uploadToR2(file, existingOriginalKey)
+
+      setGearItem(index, 'imageUrl', originalUrl)
+      if (!target?.imageAlt.trim()) {
+        setGearItem(index, 'imageAlt', target?.name || 'Gear photo')
+      }
+    } catch (error) {
+      setUploadError(String(error))
+    } finally {
+      setUploadingGearIndex(null)
     }
   }
 
@@ -129,6 +211,7 @@ export default function AboutEditPage() {
   }
 
   const page = ensurePage(form)
+  const gear = ensureGear(form)
 
   return (
     <AdminLayout>
@@ -319,7 +402,88 @@ export default function AboutEditPage() {
                 onChange={(e) => setPage('backLinkUrl', e.target.value)}
               />
             </div>
+
+            <div className="space-y-4 border-t border-white/10 pt-6">
+              <Field label="Gear 区块标题" value={gear.title} onChange={(e) => setGear('title', e.target.value)} />
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">Gear 区块简介</label>
+                <textarea
+                  value={gear.intro}
+                  rows={2}
+                  onChange={(e) => setGear('intro', e.target.value)}
+                  className="w-full resize-y rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/25 outline-none transition focus:border-white/30 focus:bg-white/[0.06]"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">Gear 项目</label>
+                <button
+                  onClick={addGearItem}
+                  className="rounded-full border border-white/10 px-4 py-1.5 text-[11px] tracking-wide text-white/50 transition hover:border-white/20 hover:text-white/80"
+                >
+                  + 新增 Gear
+                </button>
+              </div>
+
+              {gear.items.map((item, index) => (
+                <div key={item.id || index} className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-white/45">Item {index + 1}</p>
+                    <button
+                      onClick={() => removeGearItem(index)}
+                      className="text-xs text-white/35 transition hover:text-red-400"
+                    >
+                      删除
+                    </button>
+                  </div>
+
+                  <Field
+                    label="名称"
+                    value={item.name}
+                    onChange={(e) => setGearItem(index, 'name', e.target.value)}
+                  />
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">描述</label>
+                    <textarea
+                      value={item.description}
+                      rows={2}
+                      onChange={(e) => setGearItem(index, 'description', e.target.value)}
+                      className="w-full resize-y rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/25 outline-none transition focus:border-white/30 focus:bg-white/[0.06]"
+                    />
+                  </div>
+                  <Field
+                    label="图片 URL"
+                    value={item.imageUrl}
+                    onChange={(e) => setGearItem(index, 'imageUrl', e.target.value)}
+                  />
+                  <div className="flex items-center gap-3">
+                    <label className="inline-flex cursor-pointer items-center rounded-full border border-white/12 px-4 py-2 text-[12px] text-white/70 transition hover:border-white/30 hover:text-white">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) uploadGearImage(index, file)
+                          e.currentTarget.value = ''
+                        }}
+                      />
+                      {uploadingGearIndex === index ? '上传中...' : '上传 Gear 图片到 R2'}
+                    </label>
+                  </div>
+                  <Field
+                    label="图片 Alt"
+                    value={item.imageAlt}
+                    onChange={(e) => setGearItem(index, 'imageAlt', e.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
           </section>
+
+          {uploadError && (
+            <p className="text-[12px] text-red-400">{uploadError}</p>
+          )}
 
           {saved && !dirty && (
             <p className="text-[12px] text-green-400">✓ 已保存</p>

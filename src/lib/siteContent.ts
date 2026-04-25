@@ -36,6 +36,14 @@ export function mergeSiteContent(parsed: Partial<SiteContent>): SiteContent {
           parsed.about?.page?.bioParagraphs
           ?? defaultSiteContent.about.page?.bioParagraphs
           ?? defaultSiteContent.about.paragraphs,
+        gear: {
+          ...defaultSiteContent.about.page?.gear,
+          ...parsed.about?.page?.gear,
+          items:
+            parsed.about?.page?.gear?.items
+            ?? defaultSiteContent.about.page?.gear?.items
+            ?? [],
+        },
       },
     },
     contact: {

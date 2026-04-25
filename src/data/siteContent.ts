@@ -36,6 +36,33 @@ export const defaultSiteContent: SiteContent = {
       portfolioButtonLink: '/#portfolio',
       backLinkText: 'Back to Home',
       backLinkUrl: '/',
+      gear: {
+        title: 'MY GEAR /',
+        intro: 'A minimal kit I use for landscape and urban field work.',
+        items: [
+          {
+            id: 'gear-1',
+            name: 'Primary Camera Body',
+            description: 'My main full-frame camera for low-light and travel work.',
+            imageUrl: '/uploads/photos%2F1776646075264-mmexport1684750561658.jpg',
+            imageAlt: 'Primary camera body on a dark table',
+          },
+          {
+            id: 'gear-2',
+            name: 'Wide Angle Lens',
+            description: 'Used for expansive landscapes, architecture, and nightscape scenes.',
+            imageUrl: '/uploads/photos%2F1776645387522-dsc_6595-1.jpg',
+            imageAlt: 'Wide angle lens for landscape photography',
+          },
+          {
+            id: 'gear-3',
+            name: 'Travel Tripod',
+            description: 'A compact tripod for long exposure and stable framing in the field.',
+            imageUrl: '/uploads/photos%2F1776645553403-dsc_5823.jpg',
+            imageAlt: 'Compact travel tripod standing outdoors',
+          },
+        ],
+      },
     },
   },
   contact: {

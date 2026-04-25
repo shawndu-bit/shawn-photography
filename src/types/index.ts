@@ -41,6 +41,20 @@ export interface HeroContent {
   imageAlt: string
 }
 
+export interface AboutGearItem {
+  id: string
+  name: string
+  description: string
+  imageUrl: string
+  imageAlt: string
+}
+
+export interface AboutPageGear {
+  title: string
+  intro: string
+  items: AboutGearItem[]
+}
+
 export interface AboutPageContent {
   eyebrow: string
   title: string
@@ -55,6 +69,7 @@ export interface AboutPageContent {
   portfolioButtonLink: string
   backLinkText: string
   backLinkUrl: string
+  gear?: AboutPageGear
 }
 
 export interface AboutContent {

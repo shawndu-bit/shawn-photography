@@ -5,7 +5,7 @@ import SiteHeader from '@/components/SiteHeader'
 import Footer from '@/components/Footer'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import { defaultSiteContent } from '@/data/siteContent'
-import type { AboutContent } from '@/types'
+import type { AboutContent, AboutGearItem } from '@/types'
 
 function keepLightTogether(title: string) {
   return title.replace(/\sof light$/i, ' of\u00a0light')
@@ -15,12 +15,27 @@ function isSpecialOrExternalLink(url: string) {
   return /^(mailto:|tel:|https?:)/i.test(url)
 }
 
+function normalizeGearItems(items: AboutGearItem[] | undefined, fallback: AboutGearItem[] = []) {
+  return (items ?? fallback)
+    .map((item, index) => ({
+      id: item.id || `gear-${index}`,
+      name: item.name ?? '',
+      description: item.description ?? '',
+      imageUrl: item.imageUrl ?? '',
+      imageAlt: item.imageAlt ?? item.name ?? '',
+    }))
+    .filter((item) => item.name.trim().length > 0 || item.imageUrl.trim().length > 0)
+}
+
 function getAboutCopy(about: AboutContent) {
   const defaults = defaultSiteContent.about.page
   const page = about.page
   const fallbackBio = about.paragraphs.filter((paragraph) => paragraph.trim().length > 0)
   const pageBio = (page?.bioParagraphs ?? []).filter((paragraph) => paragraph.trim().length > 0)
   const selected = pageBio.length > 0 ? pageBio : fallbackBio
+
+  const defaultGearItems = defaults?.gear?.items ?? []
+  const gearItems = normalizeGearItems(page?.gear?.items, defaultGearItems)
 
   return {
     eyebrow: page?.eyebrow?.trim() || about.eyebrow || defaults?.eyebrow || 'About Me',
@@ -48,6 +63,9 @@ function getAboutCopy(about: AboutContent) {
     portfolioButtonLink: page?.portfolioButtonLink?.trim() || defaults?.portfolioButtonLink || '/#portfolio',
     backLinkText: page?.backLinkText?.trim() || defaults?.backLinkText || 'Back to Home',
     backLinkUrl: page?.backLinkUrl?.trim() || defaults?.backLinkUrl || '/',
+    gearTitle: page?.gear?.title?.trim() || defaults?.gear?.title || 'MY GEAR /',
+    gearIntro: page?.gear?.intro?.trim() || defaults?.gear?.intro || '',
+    gearItems,
   }
 }
 
@@ -66,13 +84,13 @@ export default function AboutPage() {
       <main className="bg-carbon text-white">
         <SiteHeader mode="inner" />
 
-        <section className="relative overflow-hidden border-b border-white/8 pt-22 pb-8 md:pt-24 md:pb-10 lg:pt-28 lg:pb-12">
+        <section className="relative overflow-hidden border-b border-white/8 pt-28 pb-8 md:pt-24 md:pb-10 lg:pt-28 lg:pb-12">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_55%_20%,rgba(255,255,255,0.06)_0%,transparent_65%)]" />
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-carbon to-transparent" />
 
           <div className="relative mx-auto max-w-[1200px] px-6 lg:px-12">
             <p className="mb-3 text-xs uppercase tracking-[0.5em] text-white/35">{copy.eyebrow}</p>
-            <h1 className="font-display text-4xl leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl lg:whitespace-nowrap">
+            <h1 className="font-display text-3xl leading-tight tracking-tight text-white sm:text-4xl lg:text-6xl lg:whitespace-nowrap">
               {keepLightTogether(copy.title)}
             </h1>
             <p className="mt-2 text-xs uppercase tracking-[0.28em] text-white/45 sm:text-sm">
@@ -167,6 +185,37 @@ export default function AboutPage() {
               </div>
             </div>
           </div>
+
+          {copy.gearItems.length > 0 && (
+            <section className="mt-10 border-t border-white/10 pt-8 md:mt-12 md:pt-10">
+              <p className="mb-2 text-[11px] uppercase tracking-[0.36em] text-white/38">{copy.gearTitle}</p>
+              {copy.gearIntro && (
+                <p className="mb-6 max-w-3xl text-sm leading-7 text-white/60 sm:text-base">{copy.gearIntro}</p>
+              )}
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {copy.gearItems.map((item) => (
+                  <article key={item.id} className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.imageAlt || item.name}
+                        className="aspect-[4/3] w-full object-cover object-center"
+                      />
+                    ) : (
+                      <div className="aspect-[4/3] w-full bg-white/[0.03]" />
+                    )}
+                    <div className="space-y-2 p-4">
+                      <h3 className="text-sm uppercase tracking-[0.2em] text-white/85">{item.name}</h3>
+                      {item.description && (
+                        <p className="text-sm leading-6 text-white/60">{item.description}</p>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
         </section>
       </main>
 
