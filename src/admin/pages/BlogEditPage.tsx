@@ -27,6 +27,15 @@ export default function BlogEditPage() {
     setDirty(false)
   }
 
+
+  async function handleToggleFeatured(id: string) {
+    const nextPosts = posts.map((post) => (
+      post.id === id ? { ...post, featuredOnHomepage: !post.featuredOnHomepage } : post
+    ))
+    setPosts(nextPosts)
+    await saveContent({ ...siteContent, blog, blogPosts: nextPosts })
+  }
+
   async function handleDeletePost(id: string) {
     const nextPosts = posts.filter((post) => post.id !== id)
     await saveContent({ ...siteContent, blog, blogPosts: nextPosts })
@@ -88,7 +97,17 @@ export default function BlogEditPage() {
                         <p className="text-base text-white">{post.title || '(Untitled)'}</p>
                         <p className="mt-1 text-xs text-white/45">/{post.slug}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <button
+                          onClick={() => void handleToggleFeatured(post.id)}
+                          className={`rounded-full border px-4 py-1.5 text-[11px] uppercase tracking-[0.22em] transition ${
+                            post.featuredOnHomepage
+                              ? 'border-emerald-300/45 bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/20'
+                              : 'border-white/15 text-white/55 hover:border-white/35 hover:text-white/80'
+                          }`}
+                        >
+                          Homepage: {post.featuredOnHomepage ? 'On' : 'Off'}
+                        </button>
                         <Link
                           to={`/admin/blog/${post.id}/edit`}
                           className="rounded-full border border-white/15 px-4 py-1.5 text-[11px] uppercase tracking-[0.22em] text-white/70 transition hover:border-white/35 hover:text-white"
