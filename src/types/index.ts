@@ -90,13 +90,22 @@ export interface ContactContent {
 export interface BlogContent {
   eyebrow: string
   title: string
+  subtitle: string
 }
 
 export interface BlogPost {
   id: string
-  category: string
   title: string
+  slug: string
   excerpt: string
+  coverImage: string
+  coverImageAlt: string
+  content: string
+  category: string
+  published: boolean
+  featuredOnHomepage: boolean
+  publishedAt: string
+  updatedAt: string
 }
 
 export interface SiteSectionVisibility {
