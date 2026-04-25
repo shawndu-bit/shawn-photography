@@ -5,6 +5,7 @@ import MarkdownContent from '@/components/MarkdownContent'
 import Field from '@/admin/components/ui/Field'
 import Toggle from '@/admin/components/ui/Toggle'
 import SaveBar from '@/admin/components/ui/SaveBar'
+import MediaPicker, { type MediaPickerAsset } from '@/admin/components/MediaPicker'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import { ensureUniqueSlug, slugify } from '@/lib/blog'
 import type { BlogPost } from '@/types'
@@ -45,6 +46,7 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
   const [uploadingCover, setUploadingCover] = useState(false)
   const [uploadingInlineImage, setUploadingInlineImage] = useState(false)
   const [inlineImageAlt, setInlineImageAlt] = useState('博客图片')
+  const [pickerTarget, setPickerTarget] = useState<'cover' | 'inline' | null>(null)
 
   useEffect(() => {
     if (mode === 'edit' && sourcePost) {
@@ -71,9 +73,15 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
     setDirty(true)
   }
 
-  async function uploadImage(file: File) {
+  async function uploadImage(
+    file: File,
+    metadata: { usageType: string; uploadedFrom: string },
+  ) {
     const formData = new FormData()
     formData.append('file', file)
+    formData.append('usageType', metadata.usageType)
+    formData.append('uploadedFrom', metadata.uploadedFrom)
+    formData.append('category', 'general')
     const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData })
     const data = (await res.json()) as { ok?: boolean; originalUrl?: string; error?: string }
     if (!res.ok || !data.ok || !data.originalUrl) {
@@ -85,7 +93,10 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
   async function uploadCoverImage(file: File) {
     try {
       setUploadingCover(true)
-      const imageUrl = await uploadImage(file)
+      const imageUrl = await uploadImage(file, {
+        usageType: 'blog_cover',
+        uploadedFrom: 'admin_blog',
+      })
       setField('coverImage', imageUrl)
     } finally {
       setUploadingCover(false)
@@ -124,11 +135,33 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
   async function uploadInlineImage(file: File) {
     try {
       setUploadingInlineImage(true)
-      const imageUrl = await uploadImage(file)
+      const imageUrl = await uploadImage(file, {
+        usageType: 'blog_inline',
+        uploadedFrom: 'admin_blog',
+      })
       insertMarkdownImageAtCursor(imageUrl, inlineImageAlt)
     } finally {
       setUploadingInlineImage(false)
     }
+  }
+
+  function resolvePickerAlt(asset: MediaPickerAsset, fallback = '') {
+    return asset.alt?.trim()
+      || asset.title?.trim()
+      || asset.filename?.trim()
+      || fallback.trim()
+      || 'Blog image'
+  }
+
+  function selectCoverFromLibrary(asset: MediaPickerAsset) {
+    setField('coverImage', asset.originalUrl)
+    setField('coverImageAlt', resolvePickerAlt(asset, 'Blog cover image'))
+    setPickerTarget(null)
+  }
+
+  function selectInlineFromLibrary(asset: MediaPickerAsset) {
+    insertMarkdownImageAtCursor(asset.originalUrl, resolvePickerAlt(asset, inlineImageAlt || 'Blog image'))
+    setPickerTarget(null)
   }
 
   async function handleSave() {
@@ -236,6 +269,12 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
               />
               {uploadingCover ? 'Uploading cover...' : 'Upload cover image to R2'}
             </label>
+            <button
+              onClick={() => setPickerTarget('cover')}
+              className="rounded-full border border-white/12 px-4 py-2 text-[12px] text-white/70 transition hover:border-white/30 hover:text-white"
+            >
+              Choose from library
+            </button>
             <Field
               label="Cover Image Alt"
               value={post.coverImageAlt}
@@ -282,6 +321,12 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
                 />
                 {uploadingInlineImage ? '上传并插入中...' : '插入图片'}
               </label>
+              <button
+                onClick={() => setPickerTarget('inline')}
+                className="inline-flex items-center rounded-full border border-white/12 px-4 py-2 text-[12px] text-white/70 transition hover:border-white/30 hover:text-white"
+              >
+                Choose from library
+              </button>
             </div>
 
             {preview && (
@@ -303,6 +348,18 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
         )}
       </div>
       <SaveBar dirty={dirty} onSave={() => void handleSave()} />
+      <MediaPicker
+        open={pickerTarget !== null}
+        onClose={() => setPickerTarget(null)}
+        onSelect={(asset) => {
+          if (pickerTarget === 'cover') {
+            selectCoverFromLibrary(asset)
+            return
+          }
+          selectInlineFromLibrary(asset)
+        }}
+        title={pickerTarget === 'cover' ? 'Choose blog cover image' : 'Choose image to insert into markdown'}
+      />
     </AdminLayout>
   )
 }
