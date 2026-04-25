@@ -41,12 +41,29 @@ export interface HeroContent {
   imageAlt: string
 }
 
+export interface AboutPageContent {
+  eyebrow: string
+  title: string
+  subtitle: string
+  bioHeading: string
+  bioParagraphs: string[]
+  websiteHeading: string
+  websiteParagraph: string
+  contactButtonText: string
+  contactButtonLink: string
+  portfolioButtonText: string
+  portfolioButtonLink: string
+  backLinkText: string
+  backLinkUrl: string
+}
+
 export interface AboutContent {
   eyebrow: string
   title: string
   portraitImageSrc: string
   portraitImageAlt: string
   paragraphs: string[]
+  page?: AboutPageContent
 }
 
 export interface ContactContent {
