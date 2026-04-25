@@ -15,6 +15,9 @@ import BlogEditPage from './admin/pages/BlogEditPage';
 import ContactEditPage from './admin/pages/ContactEditPage';
 import PhotosPage from './admin/pages/PhotosPage';
 import VisibilityPage from './admin/pages/VisibilityPage';
+import PortfolioPlaceholderPage from './admin/pages/PortfolioPlaceholderPage';
+import BlogPagePlaceholder from './admin/pages/BlogPagePlaceholder';
+import PhotosLibraryPlaceholderPage from './admin/pages/PhotosLibraryPlaceholderPage';
 import './index.css';
 
 function AppProviders({ children }: { children: React.ReactNode }) {
@@ -46,6 +49,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/admin/contact" element={<ContactEditPage />} />
           <Route path="/admin/photos" element={<PhotosPage />} />
           <Route path="/admin/visibility" element={<VisibilityPage />} />
+          <Route path="/admin/portfolio" element={<PortfolioPlaceholderPage />} />
+          <Route path="/admin/blog-page" element={<BlogPagePlaceholder />} />
+          <Route path="/admin/photos-library" element={<PhotosLibraryPlaceholderPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

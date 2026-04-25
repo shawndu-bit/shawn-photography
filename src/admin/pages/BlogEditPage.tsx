@@ -60,7 +60,8 @@ export default function BlogEditPage() {
         <div className="mb-8 flex items-end justify-between">
           <div>
             <p className="mb-1 text-[11px] uppercase tracking-[0.45em] text-white/35">编辑</p>
-            <h1 className="font-display text-3xl text-white">Blog 日志</h1>
+            <h1 className="font-display text-3xl text-white">Blog Preview</h1>
+            <p className="mt-2 text-sm text-white/55">Homepage blog preview editor (not full blog post management).</p>
           </div>
           <button
             onClick={addPost}

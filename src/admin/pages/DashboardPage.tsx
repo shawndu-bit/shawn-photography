@@ -3,12 +3,15 @@ import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import { Link } from 'react-router-dom'
 
 const cards = [
-  { to: '/admin/hero', title: 'Hero 首屏', desc: '标题、副文、背景图片' },
-  { to: '/admin/about', title: 'About Me', desc: '个人介绍、标题、段落' },
-  { to: '/admin/blog', title: 'Blog 日志', desc: '管理日志卡片内容' },
-  { to: '/admin/contact', title: 'Contact', desc: '联系标题与邮筱地址' },
-  { to: '/admin/photos', title: '图片管理', desc: '添加、编辑、排序作品集' },
-  { to: '/admin/visibility', title: '版块开关', desc: '控制首页各部分显示状态' },
+  { to: '/admin/hero', title: 'Hero 首屏', desc: 'Homepage 首屏内容编辑' },
+  { to: '/admin/about', title: 'About 关于', desc: '关于页内容编辑（已接入公开 /about）' },
+  { to: '/admin/blog', title: 'Blog Preview', desc: 'Homepage Blog 预览条目编辑' },
+  { to: '/admin/contact', title: 'Contact 联系', desc: 'Homepage 联系模块内容编辑' },
+  { to: '/admin/photos', title: 'Portfolio Preview', desc: 'Homepage 作品预览图片与排序' },
+  { to: '/admin/visibility', title: 'Settings 设置', desc: 'Homepage 版块显示开关' },
+  { to: '/admin/portfolio', title: 'Portfolio 作品集', desc: '独立作品集页面管理（占位）' },
+  { to: '/admin/blog-page', title: 'Blog 日志', desc: '完整博客系统管理（占位）' },
+  { to: '/admin/photos-library', title: 'Photos 图片管理', desc: '完整图片库管理（占位）' },
 ]
 
 export default function DashboardPage() {
@@ -27,9 +30,8 @@ export default function DashboardPage() {
     <AdminLayout>
       <div className="px-8 py-10">
         <p className="mb-1 text-[11px] uppercase tracking-[0.45em] text-white/35">Admin Panel</p>
-        <h1 className="mb-8 font-display text-3xl text-white">内容管理中心</h1>
+        <h1 className="mb-8 font-display text-3xl text-white">Dashboard 总览</h1>
 
-        {/* Stats */}
         <div className="mb-8 grid grid-cols-3 gap-4">
           {stats.map((s) => (
             <div key={s.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
@@ -39,7 +41,6 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Quick nav cards */}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => (
             <Link
