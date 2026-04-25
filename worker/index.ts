@@ -47,6 +47,30 @@ interface SitePhotoRow {
   position: number
 }
 
+interface MediaAssetRow {
+  id: string
+  kind: string
+  usage_type: string
+  uploaded_from: string
+  original_key: string
+  original_url: string
+  thumbnail_key: string | null
+  thumbnail_url: string | null
+  filename: string | null
+  mime_type: string | null
+  file_size_bytes: number | string | null
+  width: number | null
+  height: number | null
+  title: string
+  alt: string
+  description: string
+  category: string
+  tags: unknown
+  status: string
+  created_at: string
+  updated_at: string
+}
+
 const ALLOWED_IMAGE_TYPES = new Set([
   'image/jpeg',
   'image/jpg',
@@ -148,6 +172,22 @@ function normalizeObject(value: unknown): Record<string, unknown> {
 function normalizeArray(value: unknown): unknown[] {
   const parsed = parsePossiblyStringifiedJson(value)
   return Array.isArray(parsed) ? parsed : []
+}
+
+function normalizeTagsValue(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value
+  if (typeof value === 'string') {
+    const parsed = parsePossiblyStringifiedJson(value)
+    if (Array.isArray(parsed)) return parsed
+
+    const trimmed = value.trim()
+    if (!trimmed) return []
+    return trimmed
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0)
+  }
+  return []
 }
 
 async function loadSiteContent(env: Env) {
@@ -309,6 +349,13 @@ export default {
         const file = formData.get('file')
         const existingOriginalKey = String(formData.get('existingOriginalKey') || '').trim()
         const existingThumbKey = String(formData.get('existingThumbKey') || '').trim()
+        const usageType = String(formData.get('usageType') || '').trim() || 'general'
+        const uploadedFrom = String(formData.get('uploadedFrom') || '').trim() || 'unknown'
+        const title = String(formData.get('title') || '').trim()
+        const alt = String(formData.get('alt') || '').trim()
+        const description = String(formData.get('description') || '').trim()
+        const category = String(formData.get('category') || '').trim() || 'general'
+        const tags = normalizeTagsValue(formData.get('tags'))
 
         if (!(file instanceof File)) {
           return Response.json({ ok: false, error: 'Missing file' }, { status: 400 })
@@ -349,15 +396,294 @@ export default {
           httpMetadata: { contentType: thumbContentType },
         })
 
+        let assetId: string | null = null
+        let warning = ''
+
+        try {
+          const inserted = await neonQuery<{ id: string }>(
+            env,
+            `INSERT INTO media_assets (
+               kind,
+               usage_type,
+               uploaded_from,
+               original_key,
+               original_url,
+               thumbnail_key,
+               thumbnail_url,
+               filename,
+               mime_type,
+               file_size_bytes,
+               title,
+               alt,
+               description,
+               category,
+               tags,
+               updated_at
+             ) VALUES (
+               'image',
+               $1, $2, $3, $4, $5, $6, $7, $8, $9,
+               $10, $11, $12, $13, $14::jsonb, NOW()
+             )
+             ON CONFLICT (original_key) DO UPDATE
+             SET
+               usage_type = EXCLUDED.usage_type,
+               uploaded_from = EXCLUDED.uploaded_from,
+               original_url = EXCLUDED.original_url,
+               thumbnail_key = EXCLUDED.thumbnail_key,
+               thumbnail_url = EXCLUDED.thumbnail_url,
+               filename = EXCLUDED.filename,
+               mime_type = EXCLUDED.mime_type,
+               file_size_bytes = EXCLUDED.file_size_bytes,
+               title = EXCLUDED.title,
+               alt = EXCLUDED.alt,
+               description = EXCLUDED.description,
+               category = EXCLUDED.category,
+               tags = EXCLUDED.tags,
+               status = 'active',
+               updated_at = NOW()
+             RETURNING id`,
+            [
+              usageType,
+              uploadedFrom,
+              originalKey,
+              `/uploads/${encodeURIComponent(originalKey)}`,
+              thumbnailKey,
+              `/uploads/${encodeURIComponent(thumbnailKey)}`,
+              file.name || null,
+              file.type || null,
+              file.size || null,
+              title,
+              alt,
+              description,
+              category,
+              JSON.stringify(tags),
+            ],
+          )
+          assetId = inserted[0]?.id ?? null
+        } catch (assetError) {
+          warning = `Upload succeeded but media asset registration failed: ${String(assetError)}`
+        }
+
         return Response.json({
           ok: true,
           originalKey,
           originalUrl: `/uploads/${encodeURIComponent(originalKey)}`,
           thumbnailKey,
           thumbnailUrl: `/uploads/${encodeURIComponent(thumbnailKey)}`,
+          assetId,
+          ...(warning ? { warning } : {}),
         })
       } catch (error) {
         return Response.json({ ok: false, error: `Upload failed: ${String(error)}` }, { status: 500 })
+      }
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/admin/media-assets') {
+      try {
+        const usageType = url.searchParams.get('usageType')?.trim() || ''
+        const status = url.searchParams.get('status')?.trim() || 'active'
+        const category = url.searchParams.get('category')?.trim() || ''
+
+        const conditions: string[] = []
+        const params: unknown[] = []
+
+        if (usageType) {
+          params.push(usageType)
+          conditions.push(`usage_type = $${params.length}`)
+        }
+        if (status) {
+          params.push(status)
+          conditions.push(`status = $${params.length}`)
+        }
+        if (category) {
+          params.push(category)
+          conditions.push(`category = $${params.length}`)
+        }
+
+        const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+        const assets = await neonQuery<MediaAssetRow>(
+          env,
+          `SELECT
+             id,
+             kind,
+             usage_type,
+             uploaded_from,
+             original_key,
+             original_url,
+             thumbnail_key,
+             thumbnail_url,
+             filename,
+             mime_type,
+             file_size_bytes,
+             width,
+             height,
+             title,
+             alt,
+             description,
+             category,
+             tags,
+             status,
+             created_at,
+             updated_at
+           FROM media_assets
+           ${whereClause}
+           ORDER BY created_at DESC`,
+          params,
+        )
+
+        return Response.json({
+          ok: true,
+          data: assets.map((asset) => ({
+            id: asset.id,
+            kind: asset.kind,
+            usageType: asset.usage_type,
+            uploadedFrom: asset.uploaded_from,
+            originalKey: asset.original_key,
+            originalUrl: asset.original_url,
+            thumbnailKey: asset.thumbnail_key,
+            thumbnailUrl: asset.thumbnail_url,
+            filename: asset.filename,
+            mimeType: asset.mime_type,
+            fileSizeBytes: asset.file_size_bytes === null ? null : Number(asset.file_size_bytes),
+            width: asset.width,
+            height: asset.height,
+            title: asset.title,
+            alt: asset.alt,
+            description: asset.description,
+            category: asset.category,
+            tags: normalizeArray(asset.tags),
+            status: asset.status,
+            createdAt: asset.created_at,
+            updatedAt: asset.updated_at,
+          })),
+        })
+      } catch (error) {
+        return Response.json({ ok: false, error: `Media assets load failed: ${String(error)}` }, { status: 500 })
+      }
+    }
+
+    if (request.method === 'PUT' && url.pathname.startsWith('/api/admin/media-assets/')) {
+      try {
+        const id = url.pathname.replace('/api/admin/media-assets/', '').trim()
+        if (!id) {
+          return Response.json({ ok: false, error: 'Missing media asset id' }, { status: 400 })
+        }
+
+        const body = await parseJsonBody<Record<string, unknown>>(request)
+        const title = typeof body.title === 'string' ? body.title : undefined
+        const alt = typeof body.alt === 'string' ? body.alt : undefined
+        const description = typeof body.description === 'string' ? body.description : undefined
+        const usageType = typeof body.usage_type === 'string'
+          ? body.usage_type
+          : typeof body.usageType === 'string'
+            ? body.usageType
+            : undefined
+        const category = typeof body.category === 'string' ? body.category : undefined
+        const status = typeof body.status === 'string' ? body.status : undefined
+        const tags = body.tags !== undefined ? normalizeTagsValue(body.tags) : undefined
+
+        const updates: string[] = []
+        const params: unknown[] = []
+
+        if (title !== undefined) {
+          params.push(title)
+          updates.push(`title = $${params.length}`)
+        }
+        if (alt !== undefined) {
+          params.push(alt)
+          updates.push(`alt = $${params.length}`)
+        }
+        if (description !== undefined) {
+          params.push(description)
+          updates.push(`description = $${params.length}`)
+        }
+        if (usageType !== undefined) {
+          params.push(usageType)
+          updates.push(`usage_type = $${params.length}`)
+        }
+        if (category !== undefined) {
+          params.push(category)
+          updates.push(`category = $${params.length}`)
+        }
+        if (tags !== undefined) {
+          params.push(JSON.stringify(tags))
+          updates.push(`tags = $${params.length}::jsonb`)
+        }
+        if (status !== undefined) {
+          params.push(status)
+          updates.push(`status = $${params.length}`)
+        }
+
+        if (updates.length === 0) {
+          return Response.json({ ok: false, error: 'No updatable fields provided' }, { status: 400 })
+        }
+
+        params.push(id)
+        const updated = await neonQuery<MediaAssetRow>(
+          env,
+          `UPDATE media_assets
+           SET
+             ${updates.join(', ')},
+             updated_at = NOW()
+           WHERE id = $${params.length}
+           RETURNING
+             id,
+             kind,
+             usage_type,
+             uploaded_from,
+             original_key,
+             original_url,
+             thumbnail_key,
+             thumbnail_url,
+             filename,
+             mime_type,
+             file_size_bytes,
+             width,
+             height,
+             title,
+             alt,
+             description,
+             category,
+             tags,
+             status,
+             created_at,
+             updated_at`,
+          params,
+        )
+
+        if (!updated[0]) {
+          return Response.json({ ok: false, error: 'Media asset not found' }, { status: 404 })
+        }
+
+        const asset = updated[0]
+        return Response.json({
+          ok: true,
+          data: {
+            id: asset.id,
+            kind: asset.kind,
+            usageType: asset.usage_type,
+            uploadedFrom: asset.uploaded_from,
+            originalKey: asset.original_key,
+            originalUrl: asset.original_url,
+            thumbnailKey: asset.thumbnail_key,
+            thumbnailUrl: asset.thumbnail_url,
+            filename: asset.filename,
+            mimeType: asset.mime_type,
+            fileSizeBytes: asset.file_size_bytes === null ? null : Number(asset.file_size_bytes),
+            width: asset.width,
+            height: asset.height,
+            title: asset.title,
+            alt: asset.alt,
+            description: asset.description,
+            category: asset.category,
+            tags: normalizeArray(asset.tags),
+            status: asset.status,
+            createdAt: asset.created_at,
+            updatedAt: asset.updated_at,
+          },
+        })
+      } catch (error) {
+        return Response.json({ ok: false, error: `Media asset update failed: ${String(error)}` }, { status: 500 })
       }
     }
 
