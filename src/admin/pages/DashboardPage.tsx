@@ -5,12 +5,11 @@ import { Link } from 'react-router-dom'
 const cards = [
   { to: '/admin/hero', title: 'Hero 首屏', desc: 'Homepage 首屏内容编辑' },
   { to: '/admin/about', title: 'About 关于', desc: '关于页内容编辑（已接入公开 /about）' },
-  { to: '/admin/blog', title: 'Blog Preview', desc: 'Homepage Blog 预览条目编辑' },
+  { to: '/admin/blog', title: 'Blog 日志', desc: '博客管理、文章列表、写作入口' },
   { to: '/admin/contact', title: 'Contact 联系', desc: 'Homepage 联系模块内容编辑' },
   { to: '/admin/photos', title: 'Portfolio Preview', desc: 'Homepage 作品预览图片与排序' },
   { to: '/admin/visibility', title: 'Settings 设置', desc: 'Homepage 版块显示开关' },
   { to: '/admin/portfolio', title: 'Portfolio 作品集', desc: '独立作品集页面管理（占位）' },
-  { to: '/admin/blog-page', title: 'Blog 日志', desc: '完整博客系统管理（占位）' },
   { to: '/admin/photos-library', title: 'Photos 图片管理', desc: '完整图片库管理（占位）' },
 ]
 

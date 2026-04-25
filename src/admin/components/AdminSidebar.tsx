@@ -17,14 +17,14 @@ const links: TopLevelLink[] = [
     children: [
       { to: '/admin/hero', label: 'Hero 首屏' },
       { to: '/admin/photos', label: 'Portfolio Preview' },
-      { to: '/admin/blog', label: 'Blog Preview' },
+      { to: '/admin/blog', label: 'Blog Preview (from posts)' },
       { to: '/admin/contact', label: 'Contact 联系' },
       { to: '/admin/visibility', label: 'Settings 设置' },
     ],
   },
   { to: '/admin/about', label: 'About 关于', icon: '○' },
   { to: '/admin/portfolio', label: 'Portfolio 作品集', icon: '▦' },
-  { to: '/admin/blog-page', label: 'Blog 日志', icon: '≡' },
+  { to: '/admin/blog', label: 'Blog 日志', icon: '≡' },
   { to: '/admin/photos-library', label: 'Photos 图片管理', icon: '▢' },
 ]
 
