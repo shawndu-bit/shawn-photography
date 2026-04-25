@@ -74,6 +74,12 @@ export const defaultSiteContent: SiteContent = {
     eyebrow: 'Blog',
     title: 'Journal & Notes',
     subtitle: 'Field notes, stories, and process from the road.',
+    cta: {
+      primaryText: 'View Portfolio',
+      primaryHref: '/portfolio',
+      secondaryText: 'Contact',
+      secondaryHref: '/#contact',
+    },
   },
   socialLinks: [
     { id: 'instagram', label: 'Instagram', platform: 'instagram', href: '#', enabled: true },

@@ -5,10 +5,24 @@ import SiteHeader from '@/components/SiteHeader'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import { formatBlogDate, getPublishedPosts } from '@/lib/blog'
 
+function isSpecialOrExternalLink(url: string) {
+  return /^(mailto:|tel:|https?:)/i.test(url)
+}
+
+function isHashRoute(url: string) {
+  return url.includes('#')
+}
+
 export default function BlogPostPage() {
   const { slug } = useParams() as { slug?: string }
   const { siteContent } = useSiteContentContext()
   const post = getPublishedPosts(siteContent.blogPosts).find((item) => item.slug === slug)
+
+  const cta = siteContent.blog.cta
+  const primaryText = cta.primaryText.trim() || 'View Portfolio'
+  const primaryHref = cta.primaryHref.trim() || '/portfolio'
+  const secondaryText = cta.secondaryText.trim() || 'Contact'
+  const secondaryHref = cta.secondaryHref.trim() || '/#contact'
 
   if (!post) {
     return (
@@ -60,18 +74,41 @@ export default function BlogPostPage() {
           <div className="mt-12 rounded-3xl border border-white/10 bg-white/[0.02] p-6">
             <p className="text-xs uppercase tracking-[0.3em] text-white/40">Explore More</p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link
-                to="/#portfolio"
-                className="rounded-full border border-white/20 px-5 py-2 text-xs uppercase tracking-[0.24em] text-white/85 transition hover:bg-white hover:text-black"
-              >
-                View Portfolio
-              </Link>
-              <Link
-                to="/#contact"
-                className="rounded-full border border-white/20 px-5 py-2 text-xs uppercase tracking-[0.24em] text-white/85 transition hover:bg-white hover:text-black"
-              >
-                Contact
-              </Link>
+              {isSpecialOrExternalLink(primaryHref) || isHashRoute(primaryHref) ? (
+                <a
+                  href={primaryHref}
+                  target={isSpecialOrExternalLink(primaryHref) && /^https?:/i.test(primaryHref) ? '_blank' : undefined}
+                  rel={isSpecialOrExternalLink(primaryHref) && /^https?:/i.test(primaryHref) ? 'noopener noreferrer' : undefined}
+                  className="rounded-full border border-white/20 px-5 py-2 text-xs uppercase tracking-[0.24em] text-white/85 transition hover:bg-white hover:text-black"
+                >
+                  {primaryText}
+                </a>
+              ) : (
+                <Link
+                  to={primaryHref}
+                  className="rounded-full border border-white/20 px-5 py-2 text-xs uppercase tracking-[0.24em] text-white/85 transition hover:bg-white hover:text-black"
+                >
+                  {primaryText}
+                </Link>
+              )}
+
+              {isSpecialOrExternalLink(secondaryHref) || isHashRoute(secondaryHref) ? (
+                <a
+                  href={secondaryHref}
+                  target={isSpecialOrExternalLink(secondaryHref) && /^https?:/i.test(secondaryHref) ? '_blank' : undefined}
+                  rel={isSpecialOrExternalLink(secondaryHref) && /^https?:/i.test(secondaryHref) ? 'noopener noreferrer' : undefined}
+                  className="rounded-full border border-white/20 px-5 py-2 text-xs uppercase tracking-[0.24em] text-white/85 transition hover:bg-white hover:text-black"
+                >
+                  {secondaryText}
+                </a>
+              ) : (
+                <Link
+                  to={secondaryHref}
+                  className="rounded-full border border-white/20 px-5 py-2 text-xs uppercase tracking-[0.24em] text-white/85 transition hover:bg-white hover:text-black"
+                >
+                  {secondaryText}
+                </Link>
+              )}
             </div>
           </div>
         </article>

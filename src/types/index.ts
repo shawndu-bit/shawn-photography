@@ -87,10 +87,18 @@ export interface ContactContent {
   email: string
 }
 
+export interface BlogContentCta {
+  primaryText: string
+  primaryHref: string
+  secondaryText: string
+  secondaryHref: string
+}
+
 export interface BlogContent {
   eyebrow: string
   title: string
   subtitle: string
+  cta: BlogContentCta
 }
 
 export interface BlogPost {

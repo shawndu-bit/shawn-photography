@@ -30,6 +30,12 @@ export function normalizeBlogSettings(blog: Partial<BlogContent> | undefined, de
     eyebrow: asString(blog?.eyebrow, defaults.eyebrow),
     title: asString(blog?.title, defaults.title),
     subtitle: asString(blog?.subtitle, defaults.subtitle),
+    cta: {
+      primaryText: asString(blog?.cta?.primaryText, defaults.cta.primaryText),
+      primaryHref: asString(blog?.cta?.primaryHref, defaults.cta.primaryHref),
+      secondaryText: asString(blog?.cta?.secondaryText, defaults.cta.secondaryText),
+      secondaryHref: asString(blog?.cta?.secondaryHref, defaults.cta.secondaryHref),
+    },
   }
 }
 

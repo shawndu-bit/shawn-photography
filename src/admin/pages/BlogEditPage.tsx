@@ -80,6 +80,26 @@ export default function BlogEditPage() {
                 onChange={(e) => setBlogField('subtitle', e.target.value)}
                 rows={4}
               />
+              <Field
+                label="Primary CTA Text"
+                value={blog.cta.primaryText}
+                onChange={(e) => setBlogField('cta', { ...blog.cta, primaryText: e.target.value })}
+              />
+              <Field
+                label="Primary CTA Link"
+                value={blog.cta.primaryHref}
+                onChange={(e) => setBlogField('cta', { ...blog.cta, primaryHref: e.target.value })}
+              />
+              <Field
+                label="Secondary CTA Text"
+                value={blog.cta.secondaryText}
+                onChange={(e) => setBlogField('cta', { ...blog.cta, secondaryText: e.target.value })}
+              />
+              <Field
+                label="Secondary CTA Link"
+                value={blog.cta.secondaryHref}
+                onChange={(e) => setBlogField('cta', { ...blog.cta, secondaryHref: e.target.value })}
+              />
             </div>
           </section>
 
