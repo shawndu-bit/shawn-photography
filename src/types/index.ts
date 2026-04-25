@@ -41,12 +41,44 @@ export interface HeroContent {
   imageAlt: string
 }
 
+export interface AboutGearItem {
+  id: string
+  name: string
+  description: string
+  imageUrl: string
+  imageAlt: string
+}
+
+export interface AboutPageGear {
+  title: string
+  intro: string
+  items: AboutGearItem[]
+}
+
+export interface AboutPageContent {
+  eyebrow: string
+  title: string
+  subtitle: string
+  bioHeading: string
+  bioParagraphs: string[]
+  websiteHeading: string
+  websiteParagraph: string
+  contactButtonText: string
+  contactButtonLink: string
+  portfolioButtonText: string
+  portfolioButtonLink: string
+  backLinkText: string
+  backLinkUrl: string
+  gear?: AboutPageGear
+}
+
 export interface AboutContent {
   eyebrow: string
   title: string
   portraitImageSrc: string
   portraitImageAlt: string
   paragraphs: string[]
+  page?: AboutPageContent
 }
 
 export interface ContactContent {

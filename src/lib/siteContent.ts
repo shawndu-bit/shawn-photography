@@ -29,6 +29,22 @@ export function mergeSiteContent(parsed: Partial<SiteContent>): SiteContent {
       ...defaultSiteContent.about,
       ...parsed.about,
       paragraphs: parsed.about?.paragraphs ?? defaultSiteContent.about.paragraphs,
+      page: {
+        ...defaultSiteContent.about.page,
+        ...parsed.about?.page,
+        bioParagraphs:
+          parsed.about?.page?.bioParagraphs
+          ?? defaultSiteContent.about.page?.bioParagraphs
+          ?? defaultSiteContent.about.paragraphs,
+        gear: {
+          ...defaultSiteContent.about.page?.gear,
+          ...parsed.about?.page?.gear,
+          items:
+            parsed.about?.page?.gear?.items
+            ?? defaultSiteContent.about.page?.gear?.items
+            ?? [],
+        },
+      },
     },
     contact: {
       ...defaultSiteContent.contact,

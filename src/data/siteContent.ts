@@ -18,6 +18,52 @@ export const defaultSiteContent: SiteContent = {
       '我专注于山地、海岸、荒野与夜景创作，以大画幅般的秩序感与留白控制，让每一张作品都像展墙上的独立叙事。',
       '网站当前以展示为主，后续可无缝扩展博客、作品管理、访客留言、商业合作表单与会员系统，并接入 Neon 与 Cloudflare R2 形成完整内容架构。',
     ],
+    page: {
+      eyebrow: 'About Me',
+      title: 'Seeking the quietest moments of the landscape',
+      subtitle: 'Based in Germany · Landscape · Urban · Nightscape',
+      bioHeading: 'About Shawn /',
+      bioParagraphs: [
+        'Hi, I’m Shawn, a photographer currently based in Germany. My work focuses on natural and urban landscapes, with a particular interest in quiet light, negative space, and restrained composition.',
+        'Shaped by travels through Australia and New Zealand, my photography is drawn to places where atmosphere, distance, and stillness become part of the image. I often look for simple visual order in complex surroundings.',
+      ],
+      websiteHeading: 'About the Website /',
+      websiteParagraph:
+        'This website brings together selected work, field notes, and photography guides. It is both a personal archive and a visual space for exploring how light, place, and memory shape the way we see.',
+      contactButtonText: 'Contact Me',
+      contactButtonLink: '/#contact',
+      portfolioButtonText: 'View Portfolio',
+      portfolioButtonLink: '/#portfolio',
+      backLinkText: 'Back to Home',
+      backLinkUrl: '/',
+      gear: {
+        title: 'MY GEAR /',
+        intro: 'A minimal kit I use for landscape and urban field work.',
+        items: [
+          {
+            id: 'gear-1',
+            name: 'Primary Camera Body',
+            description: 'My main full-frame camera for low-light and travel work.',
+            imageUrl: '/uploads/photos%2F1776646075264-mmexport1684750561658.jpg',
+            imageAlt: 'Primary camera body on a dark table',
+          },
+          {
+            id: 'gear-2',
+            name: 'Wide Angle Lens',
+            description: 'Used for expansive landscapes, architecture, and nightscape scenes.',
+            imageUrl: '/uploads/photos%2F1776645387522-dsc_6595-1.jpg',
+            imageAlt: 'Wide angle lens for landscape photography',
+          },
+          {
+            id: 'gear-3',
+            name: 'Travel Tripod',
+            description: 'A compact tripod for long exposure and stable framing in the field.',
+            imageUrl: '/uploads/photos%2F1776645553403-dsc_5823.jpg',
+            imageAlt: 'Compact travel tripod standing outdoors',
+          },
+        ],
+      },
+    },
   },
   contact: {
     eyebrow: 'Contact',
