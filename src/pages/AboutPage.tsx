@@ -11,10 +11,14 @@ function keepLightTogether(title: string) {
   return title.replace(/\sof light$/i, ' of\u00a0light')
 }
 
+function isSpecialOrExternalLink(url: string) {
+  return /^(mailto:|tel:|https?:)/i.test(url)
+}
+
 function getAboutCopy(about: AboutContent) {
   const defaults = defaultSiteContent.about.page
   const page = about.page
-  const fallbackBio = about.paragraphs.filter((paragraph) => paragraph.trim().length > 0).slice(0, 2)
+  const fallbackBio = about.paragraphs.filter((paragraph) => paragraph.trim().length > 0)
   const pageBio = (page?.bioParagraphs ?? []).filter((paragraph) => paragraph.trim().length > 0)
   const selected = pageBio.length > 0 ? pageBio : fallbackBio
 
@@ -26,14 +30,13 @@ function getAboutCopy(about: AboutContent) {
       || defaults?.subtitle
       || 'Based in Germany · Landscape · Urban · Nightscape',
     bioHeading: page?.bioHeading?.trim() || defaults?.bioHeading || 'About Shawn /',
-    firstBio:
-      selected[0]
-      || defaults?.bioParagraphs?.[0]
-      || 'Hi, I’m Shawn, a photographer currently based in Germany. My work focuses on natural and urban landscapes, with a particular interest in quiet light, negative space, and restrained composition.',
-    secondBio:
-      selected[1]
-      || defaults?.bioParagraphs?.[1]
-      || 'Shaped by travels through Australia and New Zealand, my photography is drawn to places where atmosphere, distance, and stillness become part of the image. I often look for simple visual order in complex surroundings.',
+    bioParagraphs:
+      selected.length > 0
+        ? selected
+        : defaults?.bioParagraphs ?? [
+            'Hi, I’m Shawn, a photographer currently based in Germany. My work focuses on natural and urban landscapes, with a particular interest in quiet light, negative space, and restrained composition.',
+            'Shaped by travels through Australia and New Zealand, my photography is drawn to places where atmosphere, distance, and stillness become part of the image. I often look for simple visual order in complex surroundings.',
+          ],
     websiteHeading: page?.websiteHeading?.trim() || defaults?.websiteHeading || 'About the Website /',
     websiteParagraph:
       page?.websiteParagraph?.trim()
@@ -68,7 +71,7 @@ export default function AboutPage() {
 
           <div className="relative mx-auto max-w-[1200px] px-6 lg:px-12">
             <p className="mb-3 text-xs uppercase tracking-[0.5em] text-white/35">{copy.eyebrow}</p>
-            <h1 className="max-w-5xl text-balance font-display text-4xl leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="font-display text-4xl leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl lg:whitespace-nowrap">
               {keepLightTogether(copy.title)}
             </h1>
             <p className="mt-2 text-xs uppercase tracking-[0.28em] text-white/45 sm:text-sm">
@@ -97,8 +100,9 @@ export default function AboutPage() {
               <div>
                 <p className="mb-2 text-[11px] uppercase tracking-[0.36em] text-white/38">{copy.bioHeading}</p>
                 <div className="space-y-3 text-base leading-7 text-white/72 sm:text-[17px] sm:leading-8">
-                  <p>{copy.firstBio}</p>
-                  <p>{copy.secondBio}</p>
+                  {copy.bioParagraphs.map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
                 </div>
               </div>
 
@@ -109,25 +113,55 @@ export default function AboutPage() {
 
               <div className="border-t border-white/10 pt-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <Link
-                    to={copy.contactButtonLink}
-                    className="inline-flex items-center gap-3 rounded-full border border-white/20 px-7 py-3 text-xs uppercase tracking-[0.3em] text-white/75 transition hover:border-white/40 hover:text-white"
-                  >
-                    {copy.contactButtonText}
-                    <span aria-hidden>→</span>
-                  </Link>
-                  <Link
-                    to={copy.portfolioButtonLink}
-                    className="inline-flex items-center rounded-full border border-white/12 px-6 py-3 text-xs uppercase tracking-[0.28em] text-white/62 transition hover:border-white/30 hover:text-white"
-                  >
-                    {copy.portfolioButtonText}
-                  </Link>
-                  <Link
-                    to={copy.backLinkUrl}
-                    className="ml-1 text-xs uppercase tracking-[0.3em] text-white/40 transition hover:text-white/75"
-                  >
-                    {copy.backLinkText}
-                  </Link>
+                  {isSpecialOrExternalLink(copy.contactButtonLink) ? (
+                    <a
+                      href={copy.contactButtonLink}
+                      className="inline-flex items-center gap-3 rounded-full border border-white/20 px-7 py-3 text-xs uppercase tracking-[0.3em] text-white/75 transition hover:border-white/40 hover:text-white"
+                    >
+                      {copy.contactButtonText}
+                      <span aria-hidden>→</span>
+                    </a>
+                  ) : (
+                    <Link
+                      to={copy.contactButtonLink}
+                      className="inline-flex items-center gap-3 rounded-full border border-white/20 px-7 py-3 text-xs uppercase tracking-[0.3em] text-white/75 transition hover:border-white/40 hover:text-white"
+                    >
+                      {copy.contactButtonText}
+                      <span aria-hidden>→</span>
+                    </Link>
+                  )}
+
+                  {isSpecialOrExternalLink(copy.portfolioButtonLink) ? (
+                    <a
+                      href={copy.portfolioButtonLink}
+                      className="inline-flex items-center rounded-full border border-white/12 px-6 py-3 text-xs uppercase tracking-[0.28em] text-white/62 transition hover:border-white/30 hover:text-white"
+                    >
+                      {copy.portfolioButtonText}
+                    </a>
+                  ) : (
+                    <Link
+                      to={copy.portfolioButtonLink}
+                      className="inline-flex items-center rounded-full border border-white/12 px-6 py-3 text-xs uppercase tracking-[0.28em] text-white/62 transition hover:border-white/30 hover:text-white"
+                    >
+                      {copy.portfolioButtonText}
+                    </Link>
+                  )}
+
+                  {isSpecialOrExternalLink(copy.backLinkUrl) ? (
+                    <a
+                      href={copy.backLinkUrl}
+                      className="ml-1 text-xs uppercase tracking-[0.3em] text-white/40 transition hover:text-white/75"
+                    >
+                      {copy.backLinkText}
+                    </a>
+                  ) : (
+                    <Link
+                      to={copy.backLinkUrl}
+                      className="ml-1 text-xs uppercase tracking-[0.3em] text-white/40 transition hover:text-white/75"
+                    >
+                      {copy.backLinkText}
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
