@@ -304,6 +304,9 @@ async function saveSiteContent(env: Env, data: Record<string, unknown>) {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
+    const normalizedPath = url.pathname !== '/'
+      ? url.pathname.replace(/\/+$/, '')
+      : url.pathname
 
     if (request.method === 'GET' && url.pathname === '/api/site-content') {
       try {
@@ -478,7 +481,7 @@ export default {
       }
     }
 
-    if (request.method === 'GET' && url.pathname === '/api/admin/media-assets') {
+    if (request.method === 'GET' && normalizedPath === '/api/admin/media-assets') {
       try {
         const usageType = url.searchParams.get('usageType')?.trim() || ''
         const status = url.searchParams.get('status')?.trim() || 'active'
@@ -533,7 +536,7 @@ export default {
 
         return Response.json({
           ok: true,
-          data: assets.map((asset) => ({
+          assets: assets.map((asset) => ({
             id: asset.id,
             kind: asset.kind,
             usageType: asset.usage_type,
@@ -562,9 +565,9 @@ export default {
       }
     }
 
-    if (request.method === 'PUT' && url.pathname.startsWith('/api/admin/media-assets/')) {
+    if (request.method === 'PUT' && normalizedPath.startsWith('/api/admin/media-assets/')) {
       try {
-        const id = url.pathname.replace('/api/admin/media-assets/', '').trim()
+        const id = normalizedPath.replace('/api/admin/media-assets/', '').trim()
         if (!id) {
           return Response.json({ ok: false, error: 'Missing media asset id' }, { status: 400 })
         }
@@ -687,7 +690,7 @@ export default {
       }
     }
 
-    if (url.pathname.startsWith('/api/')) {
+    if (normalizedPath.startsWith('/api/')) {
       return Response.json({ ok: false, error: 'API route not found' }, { status: 404 })
     }
 
