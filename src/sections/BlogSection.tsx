@@ -25,7 +25,7 @@ export default function BlogSection() {
         </div>
         {posts.length === 0 ? (
           <div className="rounded-[24px] border border-white/10 bg-white/[0.025] p-7 text-white/55">
-            No published blog posts yet.
+            No featured blog posts yet.
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-3">

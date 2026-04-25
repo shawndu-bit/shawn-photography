@@ -17,7 +17,6 @@ const links: TopLevelLink[] = [
     children: [
       { to: '/admin/hero', label: 'Hero 首屏' },
       { to: '/admin/photos', label: 'Portfolio Preview' },
-      { to: '/admin/blog', label: 'Blog Preview (from posts)' },
       { to: '/admin/contact', label: 'Contact 联系' },
       { to: '/admin/visibility', label: 'Settings 设置' },
     ],

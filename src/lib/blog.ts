@@ -85,9 +85,9 @@ export function getPublishedPosts(posts: BlogPost[]) {
 }
 
 export function getHomepagePreviewPosts(posts: BlogPost[], limit = 3) {
-  const published = getPublishedPosts(posts)
-  const featured = published.filter((post) => post.featuredOnHomepage)
-  return (featured.length > 0 ? featured : published).slice(0, limit)
+  return getPublishedPosts(posts)
+    .filter((post) => post.featuredOnHomepage)
+    .slice(0, limit)
 }
 
 export function formatBlogDate(value: string) {
