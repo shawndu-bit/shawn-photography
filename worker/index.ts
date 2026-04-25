@@ -190,6 +190,14 @@ function normalizeTagsValue(value: unknown): unknown[] {
   return []
 }
 
+function parseOptionalInteger(value: unknown): number | null {
+  if (value === null || value === undefined) return null
+  const parsed = Number(String(value).trim())
+  if (!Number.isFinite(parsed)) return null
+  if (parsed <= 0) return null
+  return Math.floor(parsed)
+}
+
 async function loadSiteContent(env: Env) {
   const siteRows = await neonQuery<{
     hero: Record<string, unknown>
@@ -359,6 +367,8 @@ export default {
         const description = String(formData.get('description') || '').trim()
         const category = String(formData.get('category') || '').trim() || 'general'
         const tags = normalizeTagsValue(formData.get('tags'))
+        const width = parseOptionalInteger(formData.get('width'))
+        const height = parseOptionalInteger(formData.get('height'))
 
         if (!(file instanceof File)) {
           return Response.json({ ok: false, error: 'Missing file' }, { status: 400 })
@@ -416,6 +426,8 @@ export default {
                filename,
                mime_type,
                file_size_bytes,
+               width,
+               height,
                title,
                alt,
                description,
@@ -425,7 +437,7 @@ export default {
              ) VALUES (
                'image',
                $1, $2, $3, $4, $5, $6, $7, $8, $9,
-               $10, $11, $12, $13, $14::jsonb, NOW()
+               $10, $11, $12, $13, $14, $15::jsonb, NOW()
              )
              ON CONFLICT (original_key) DO UPDATE
              SET
@@ -437,6 +449,8 @@ export default {
                filename = EXCLUDED.filename,
                mime_type = EXCLUDED.mime_type,
                file_size_bytes = EXCLUDED.file_size_bytes,
+               width = EXCLUDED.width,
+               height = EXCLUDED.height,
                title = EXCLUDED.title,
                alt = EXCLUDED.alt,
                description = EXCLUDED.description,
@@ -455,6 +469,8 @@ export default {
               file.name || null,
               file.type || null,
               file.size || null,
+              width,
+              height,
               title,
               alt,
               description,
