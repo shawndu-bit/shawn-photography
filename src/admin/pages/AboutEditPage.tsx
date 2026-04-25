@@ -137,10 +137,22 @@ export default function AboutEditPage() {
     return decodeURIComponent(path.replace('/uploads/', ''))
   }
 
-  async function uploadToR2(file: File, existingOriginalKey = '') {
+  async function uploadToR2(
+    file: File,
+    options?: {
+      existingOriginalKey?: string
+      usageType?: string
+      uploadedFrom?: string
+      category?: string
+    },
+  ) {
     const formData = new FormData()
     formData.append('file', file)
+    const existingOriginalKey = options?.existingOriginalKey || ''
     if (existingOriginalKey) formData.append('existingOriginalKey', existingOriginalKey)
+    formData.append('usageType', options?.usageType || 'general')
+    formData.append('uploadedFrom', options?.uploadedFrom || 'unknown')
+    formData.append('category', options?.category || 'general')
 
     const res = await fetch('/api/admin/upload-image', {
       method: 'POST',
@@ -165,7 +177,12 @@ export default function AboutEditPage() {
       setUploadError('')
 
       const existingOriginalKey = existingR2Key(form.portraitImageSrc)
-      const originalUrl = await uploadToR2(file, existingOriginalKey)
+      const originalUrl = await uploadToR2(file, {
+        existingOriginalKey,
+        usageType: 'about_portrait',
+        uploadedFrom: 'admin_about',
+        category: 'general',
+      })
 
       set('portraitImageSrc', originalUrl)
       if (!form.portraitImageAlt.trim()) {
@@ -186,7 +203,12 @@ export default function AboutEditPage() {
       const gear = ensureGear(form)
       const target = gear.items[index]
       const existingOriginalKey = target ? existingR2Key(target.imageUrl) : ''
-      const originalUrl = await uploadToR2(file, existingOriginalKey)
+      const originalUrl = await uploadToR2(file, {
+        existingOriginalKey,
+        usageType: 'gear',
+        uploadedFrom: 'admin_about_gear',
+        category: 'general',
+      })
 
       setGearItem(index, 'imageUrl', originalUrl)
       if (!target?.imageAlt.trim()) {

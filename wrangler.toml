@@ -10,6 +10,7 @@ watch_dir = "src"
 [assets]
 directory = "./dist"
 not_found_handling = "single-page-application"
+run_worker_first = ["/api/*", "/uploads/*", "/__diag/*"]
 
 [[r2_buckets]]
 binding = "BUCKET"
