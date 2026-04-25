@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { Facebook, Globe, Instagram, Mail, Youtube } from 'lucide-react'
+import { useEffect, type ComponentType } from 'react'
 import { Link } from 'react-router-dom'
 import SiteHeader from '@/components/SiteHeader'
 import Footer from '@/components/Footer'
