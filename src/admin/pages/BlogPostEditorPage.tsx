@@ -9,6 +9,8 @@ import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import { ensureUniqueSlug, slugify } from '@/lib/blog'
 import type { BlogPost } from '@/types'
 
+const MARKDOWN_TEXTAREA_ID = 'blog-markdown-content'
+
 function createDraftPost(): BlogPost {
   const now = new Date().toISOString()
   return {
@@ -41,6 +43,8 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
   const [dirty, setDirty] = useState(false)
   const [preview, setPreview] = useState(false)
   const [uploadingCover, setUploadingCover] = useState(false)
+  const [uploadingInlineImage, setUploadingInlineImage] = useState(false)
+  const [inlineImageAlt, setInlineImageAlt] = useState('博客图片')
 
   useEffect(() => {
     if (mode === 'edit' && sourcePost) {
@@ -67,19 +71,63 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
     setDirty(true)
   }
 
+  async function uploadImage(file: File) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData })
+    const data = (await res.json()) as { ok?: boolean; originalUrl?: string; error?: string }
+    if (!res.ok || !data.ok || !data.originalUrl) {
+      throw new Error(data.error || 'Upload failed')
+    }
+    return data.originalUrl
+  }
+
   async function uploadCoverImage(file: File) {
     try {
       setUploadingCover(true)
-      const formData = new FormData()
-      formData.append('file', file)
-      const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData })
-      const data = (await res.json()) as { ok?: boolean; originalUrl?: string; error?: string }
-      if (!res.ok || !data.ok || !data.originalUrl) {
-        throw new Error(data.error || 'Upload failed')
-      }
-      setField('coverImage', data.originalUrl)
+      const imageUrl = await uploadImage(file)
+      setField('coverImage', imageUrl)
     } finally {
       setUploadingCover(false)
+    }
+  }
+
+  function insertMarkdownImageAtCursor(imageUrl: string, altText: string) {
+    const safeAlt = altText.trim() || '博客图片'
+    const snippet = `![${safeAlt}](${imageUrl})`
+
+    if (typeof document === 'undefined') {
+      setField('content', `${post.content}${post.content.endsWith('\n') || post.content.length === 0 ? '' : '\n'}${snippet}`)
+      return
+    }
+
+    const textarea = document.getElementById(MARKDOWN_TEXTAREA_ID) as HTMLTextAreaElement | null
+    if (!textarea) {
+      setField('content', `${post.content}${post.content.endsWith('\n') || post.content.length === 0 ? '' : '\n'}${snippet}`)
+      return
+    }
+
+    const start = textarea.selectionStart ?? post.content.length
+    const end = textarea.selectionEnd ?? post.content.length
+    const before = post.content.slice(0, start)
+    const after = post.content.slice(end)
+    const nextContent = `${before}${snippet}${after}`
+    setField('content', nextContent)
+
+    requestAnimationFrame(() => {
+      const cursor = start + snippet.length
+      textarea.focus()
+      textarea.setSelectionRange(cursor, cursor)
+    })
+  }
+
+  async function uploadInlineImage(file: File) {
+    try {
+      setUploadingInlineImage(true)
+      const imageUrl = await uploadImage(file)
+      insertMarkdownImageAtCursor(imageUrl, inlineImageAlt)
+    } finally {
+      setUploadingInlineImage(false)
     }
   }
 
@@ -204,12 +252,38 @@ export default function BlogPostEditorPage({ mode }: BlogPostEditorPageProps) {
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
             <Field
               as="textarea"
+              id={MARKDOWN_TEXTAREA_ID}
               label="Markdown Content"
               rows={18}
               value={post.content}
               onChange={(e) => setField('content', e.target.value)}
               hint="Supports headings, links, lists, blockquotes, and images via markdown syntax."
             />
+
+            <div className="mt-5 flex flex-wrap items-end gap-3 rounded-xl border border-white/10 bg-white/[0.015] p-4">
+              <div className="min-w-[220px] flex-1">
+                <Field
+                  label="图片 Alt"
+                  value={inlineImageAlt}
+                  onChange={(e) => setInlineImageAlt(e.target.value)}
+                  placeholder="博客图片"
+                />
+              </div>
+              <label className="inline-flex cursor-pointer items-center rounded-full border border-white/12 px-4 py-2 text-[12px] text-white/70 transition hover:border-white/30 hover:text-white">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) void uploadInlineImage(file)
+                    e.currentTarget.value = ''
+                  }}
+                />
+                {uploadingInlineImage ? '上传并插入中...' : '插入图片'}
+              </label>
+            </div>
+
             {preview && (
               <div className="mt-6 border-t border-white/10 pt-6">
                 <p className="mb-4 text-xs uppercase tracking-[0.3em] text-white/45">Preview</p>
