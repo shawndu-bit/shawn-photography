@@ -55,6 +55,7 @@ export default function AboutPage() {
   const { siteContent } = useSiteContentContext()
   const { about } = siteContent
   const copy = getAboutCopy(about)
+  const primaryCtaClass = 'inline-flex items-center justify-center gap-3 rounded-full border border-white/15 px-8 py-4 text-sm uppercase tracking-[0.28em] text-white transition hover:bg-white hover:text-black'
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -116,7 +117,7 @@ export default function AboutPage() {
                   {isSpecialOrExternalLink(copy.contactButtonLink) ? (
                     <a
                       href={copy.contactButtonLink}
-                      className="inline-flex items-center gap-3 rounded-full border border-white/20 px-7 py-3 text-xs uppercase tracking-[0.3em] text-white/75 transition hover:border-white/40 hover:text-white"
+                      className={primaryCtaClass}
                     >
                       {copy.contactButtonText}
                       <span aria-hidden>→</span>
@@ -124,7 +125,7 @@ export default function AboutPage() {
                   ) : (
                     <Link
                       to={copy.contactButtonLink}
-                      className="inline-flex items-center gap-3 rounded-full border border-white/20 px-7 py-3 text-xs uppercase tracking-[0.3em] text-white/75 transition hover:border-white/40 hover:text-white"
+                      className={primaryCtaClass}
                     >
                       {copy.contactButtonText}
                       <span aria-hidden>→</span>
@@ -134,14 +135,14 @@ export default function AboutPage() {
                   {isSpecialOrExternalLink(copy.portfolioButtonLink) ? (
                     <a
                       href={copy.portfolioButtonLink}
-                      className="inline-flex items-center rounded-full border border-white/12 px-6 py-3 text-xs uppercase tracking-[0.28em] text-white/62 transition hover:border-white/30 hover:text-white"
+                      className={primaryCtaClass}
                     >
                       {copy.portfolioButtonText}
                     </a>
                   ) : (
                     <Link
                       to={copy.portfolioButtonLink}
-                      className="inline-flex items-center rounded-full border border-white/12 px-6 py-3 text-xs uppercase tracking-[0.28em] text-white/62 transition hover:border-white/30 hover:text-white"
+                      className={primaryCtaClass}
                     >
                       {copy.portfolioButtonText}
                     </Link>
