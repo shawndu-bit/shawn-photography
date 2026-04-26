@@ -28,6 +28,7 @@ export default function PortfolioPlaceholderPage() {
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   const albumIds = useMemo(() => {
     const categories = [...new Set(siteContent.photos.map((photo) => photo.category))]
@@ -56,11 +57,13 @@ export default function PortfolioPlaceholderPage() {
     }))
     setDirty(true)
     setSaved(false)
+    setSaveError('')
   }
 
   async function handleSave() {
     setSaving(true)
     setSaved(false)
+    setSaveError('')
     try {
       const mergedAlbumDetails = mergeAlbumDetailsWithDefaults(albumDetails)
       await saveContent({
@@ -70,8 +73,12 @@ export default function PortfolioPlaceholderPage() {
           albumDetails: mergedAlbumDetails,
         },
       })
+      setAlbumDetails(mergedAlbumDetails)
       setDirty(false)
       setSaved(true)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to save portfolio series notes.'
+      setSaveError(message)
     } finally {
       setSaving(false)
     }
@@ -81,6 +88,7 @@ export default function PortfolioPlaceholderPage() {
     setAlbumDetails(mergeAlbumDetailsWithDefaults(siteContent.portfolio?.albumDetails))
     setDirty(false)
     setSaved(false)
+    setSaveError('')
   }
 
   return (
@@ -92,6 +100,7 @@ export default function PortfolioPlaceholderPage() {
           Edit text content shown below the public portfolio carousel for each album.
         </p>
         {saved && <p className="mt-3 text-xs uppercase tracking-[0.2em] text-emerald-300/80">Saved</p>}
+        {saveError && <p className="mt-3 text-sm text-red-300/90">{saveError}</p>}
 
         <div className="mt-8 grid gap-6 xl:grid-cols-[320px_1fr]">
           <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
