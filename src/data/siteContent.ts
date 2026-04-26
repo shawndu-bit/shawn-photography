@@ -81,6 +81,50 @@ export const defaultSiteContent: SiteContent = {
       secondaryHref: '/#contact',
     },
   },
+  portfolio: {
+    albumDetails: {
+      featured: {
+        eyebrow: 'Series Notes',
+        title: 'Featured Works',
+        subtitle: 'Selected photographs across landscape, city, coast, forest, and night.',
+        body: 'A curated sequence of images focused on quiet light, atmosphere, and restrained composition.\n\nThese photographs are arranged as a visual journal of places where distance and stillness shape how a scene is remembered.',
+        contactLabel: 'Contact',
+        contactHref: 'mailto:hello@example.com',
+        blogLabel: 'Other Notes',
+        blogHref: '/blog',
+      },
+      mountains: {
+        eyebrow: 'Series Notes',
+        title: 'Mountains',
+        subtitle: 'Ridges, weather, and changing altitude light.',
+        body: 'This series follows mountain spaces where scale is sensed through silence rather than drama.\n\nEach frame prioritizes structural balance and measured contrast over spectacle.',
+      },
+      sea_lakes: {
+        eyebrow: 'Series Notes',
+        title: 'Sea & Lakes',
+        subtitle: 'Water surfaces, coastlines, and atmospheric distance.',
+        body: 'A set of coastal and inland scenes where movement is reduced to tone and rhythm.\n\nLong intervals and simple horizons are used to hold calm within each composition.',
+      },
+      forest: {
+        eyebrow: 'Series Notes',
+        title: 'Forest',
+        subtitle: 'Dense textures, filtered light, and layered depth.',
+        body: 'These photographs look for order inside organic complexity.\n\nMist, shadow, and repeating forms become the main visual language across the series.',
+      },
+      nightscape: {
+        eyebrow: 'Series Notes',
+        title: 'Nightscape',
+        subtitle: 'Low light observations between city glow and wilderness dark.',
+        body: 'A nocturnal sequence built around sparse light and controlled exposure.\n\nThe aim is to preserve atmosphere while keeping composition clean and deliberate.',
+      },
+      city: {
+        eyebrow: 'Series Notes',
+        title: 'City',
+        subtitle: 'Urban edges, geometry, and quiet transitions of light.',
+        body: 'This series gathers city images with a landscape sensibility.\n\nLines, blocks, and negative space are used to simplify complex urban scenes.',
+      },
+    },
+  },
   socialLinks: [
     { id: 'instagram', label: 'Instagram', platform: 'instagram', href: '#', enabled: true },
     { id: 'tiktok', label: 'TikTok', platform: 'tiktok', href: '#', enabled: true },

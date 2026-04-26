@@ -1,8 +1,11 @@
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import MarkdownContent from '@/components/MarkdownContent'
 import Footer from '@/components/Footer'
 import SiteHeader from '@/components/SiteHeader'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
+import { defaultSiteContent } from '@/data/siteContent'
 import type { Photo } from '@/types'
 
 interface Album {
@@ -149,6 +152,14 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
   }
 }
 
+function isSpecialOrExternalLink(url: string) {
+  return /^(mailto:|tel:|https?:)/i.test(url)
+}
+
+function isHashRoute(url: string) {
+  return url.includes('#')
+}
+
 export default function PortfolioPage() {
   const { siteContent } = useSiteContentContext()
   const albums = useMemo(() => createAlbums(siteContent.photos), [siteContent.photos])
@@ -207,6 +218,24 @@ export default function PortfolioPage() {
   }, [goNext, goPrev])
 
   const panels = getVisiblePanels(carouselOrder)
+  const albumDetail = useMemo(() => {
+    const detail = (siteContent.portfolio?.albumDetails ?? defaultSiteContent.portfolio?.albumDetails ?? {})[activeAlbumId]
+
+    return {
+      eyebrow: detail?.eyebrow?.trim() || 'Series Notes',
+      title: detail?.title?.trim() || activeAlbum?.name || 'Portfolio Series',
+      subtitle: detail?.subtitle?.trim() || (activeAlbumId === 'featured'
+        ? 'Selected photographs across landscape, city, coast, forest, and night.'
+        : 'A focused series from this portfolio.'),
+      body: detail?.body?.trim() || (activeAlbumId === 'featured'
+        ? 'A curated selection of photographs focused on quiet light, atmosphere, and restrained composition.'
+        : 'This series brings together selected photographs from this category.'),
+      contactLabel: detail?.contactLabel?.trim() || 'Contact',
+      contactHref: detail?.contactHref?.trim() || 'mailto:hello@example.com',
+      blogLabel: detail?.blogLabel?.trim() || 'Other Notes',
+      blogHref: detail?.blogHref?.trim() || '/blog',
+    }
+  }, [activeAlbum?.name, activeAlbumId, siteContent.portfolio?.albumDetails])
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -310,6 +339,58 @@ export default function PortfolioPage() {
                 ))}
               </div>
             </div>
+
+            <section className="mx-auto mt-16 w-full max-w-4xl border-t border-white/12 pt-14 lg:mt-20 lg:pt-16">
+              <p className="text-[11px] uppercase tracking-[0.35em] text-white/40">{albumDetail.eyebrow}</p>
+              <h2 className="mt-4 font-display text-3xl text-white sm:text-4xl">{albumDetail.title}</h2>
+              {albumDetail.subtitle && <p className="mt-4 max-w-3xl text-sm leading-7 text-white/60 sm:text-base">{albumDetail.subtitle}</p>}
+
+              <MarkdownContent
+                content={albumDetail.body}
+                className="mt-6 max-w-3xl text-sm [&_p]:text-white/72 [&_p]:leading-8"
+              />
+
+              <div className="mt-12 rounded-3xl border border-white/12 bg-white/[0.02] p-6">
+                <p className="text-xs uppercase tracking-[0.3em] text-white/40">Explore More</p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {isSpecialOrExternalLink(albumDetail.blogHref) || isHashRoute(albumDetail.blogHref) ? (
+                    <a
+                      href={albumDetail.blogHref}
+                      target={isSpecialOrExternalLink(albumDetail.blogHref) && /^https?:/i.test(albumDetail.blogHref) ? '_blank' : undefined}
+                      rel={isSpecialOrExternalLink(albumDetail.blogHref) && /^https?:/i.test(albumDetail.blogHref) ? 'noopener noreferrer' : undefined}
+                      className="rounded-full border border-white/20 px-5 py-2 text-xs uppercase tracking-[0.24em] text-white/85 transition hover:bg-white hover:text-black"
+                    >
+                      {albumDetail.blogLabel}
+                    </a>
+                  ) : (
+                    <Link
+                      to={albumDetail.blogHref}
+                      className="rounded-full border border-white/20 px-5 py-2 text-xs uppercase tracking-[0.24em] text-white/85 transition hover:bg-white hover:text-black"
+                    >
+                      {albumDetail.blogLabel}
+                    </Link>
+                  )}
+
+                  {isSpecialOrExternalLink(albumDetail.contactHref) || isHashRoute(albumDetail.contactHref) ? (
+                    <a
+                      href={albumDetail.contactHref}
+                      target={isSpecialOrExternalLink(albumDetail.contactHref) && /^https?:/i.test(albumDetail.contactHref) ? '_blank' : undefined}
+                      rel={isSpecialOrExternalLink(albumDetail.contactHref) && /^https?:/i.test(albumDetail.contactHref) ? 'noopener noreferrer' : undefined}
+                      className="rounded-full border border-white/20 px-5 py-2 text-xs uppercase tracking-[0.24em] text-white/85 transition hover:bg-white hover:text-black"
+                    >
+                      {albumDetail.contactLabel}
+                    </a>
+                  ) : (
+                    <Link
+                      to={albumDetail.contactHref}
+                      className="rounded-full border border-white/20 px-5 py-2 text-xs uppercase tracking-[0.24em] text-white/85 transition hover:bg-white hover:text-black"
+                    >
+                      {albumDetail.contactLabel}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </section>
           </div>
         </section>
       </main>
