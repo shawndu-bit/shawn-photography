@@ -117,7 +117,6 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(-420px,-30vw,-360px), 0, -90px) rotateY(30deg) scale(0.9)',
       opacity: 1,
       zIndex: 25,
-      filter: 'none',
     }
   }
 
@@ -128,7 +127,6 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(360px,30vw,420px), 0, -90px) rotateY(-30deg) scale(0.9)',
       opacity: 1,
       zIndex: 25,
-      filter: 'none',
     }
   }
 
@@ -139,7 +137,6 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(-700px,-48vw,-600px), 0, -180px) rotateY(42deg) scale(0.76)',
       opacity: 0.82,
       zIndex: 15,
-      filter: 'none',
     }
   }
 
@@ -149,7 +146,6 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
     transform: 'translate(-50%, -50%) translate3d(clamp(600px,48vw,700px), 0, -180px) rotateY(-42deg) scale(0.76)',
     opacity: 0.82,
     zIndex: 15,
-    filter: 'none',
   }
 }
 
@@ -246,15 +242,27 @@ export default function PortfolioPage() {
                           if (slot === 'right') goNext()
                         }}
                         disabled={isAnimating && slot !== 'center'}
-                        className={`group aspect-[3/2] overflow-hidden transition-[filter,box-shadow] duration-500 ${slot === 'center' ? 'cursor-zoom-in shadow-[0_18px_50px_rgba(0,0,0,0.28)]' : slot === 'left' || slot === 'right' ? 'cursor-pointer brightness-[0.84] hover:brightness-100 shadow-[0_10px_28px_rgba(0,0,0,0.18)]' : 'pointer-events-none brightness-[0.76] hover:brightness-95 shadow-[0_10px_28px_rgba(0,0,0,0.18)]'}`}
+                        className={`group aspect-[3/2] overflow-visible transition-[filter,box-shadow] duration-500 ${slot === 'center' ? 'cursor-zoom-in shadow-[0_22px_70px_rgba(0,0,0,0.55),0_0_36px_rgba(255,255,255,0.05)]' : slot === 'left' || slot === 'right' ? 'cursor-pointer brightness-[0.82] hover:brightness-100 shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_24px_rgba(255,255,255,0.04)]' : 'pointer-events-none brightness-[0.7] hover:brightness-90 shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_24px_rgba(255,255,255,0.04)]'}`}
                         style={getPanelStyle(slot)}
                         aria-label={slot === 'center' ? 'Open image in lightbox' : `View ${displayPhoto?.title || photo.title}`}
                       >
-                        <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
+                        <div className="relative h-full w-full overflow-hidden">
+                          <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
+                          {slot === 'center' && (
+                            <>
+                              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/72 to-transparent" />
+                              <div className="pointer-events-none absolute bottom-3 left-3 max-w-[76%] space-y-1 text-left md:bottom-5 md:left-5">
+                                <p className="text-[11px] uppercase tracking-[0.22em] text-white/90 md:text-xs">{displayPhoto?.title || photo.title}</p>
+                                {displayPhoto?.description && <p className="line-clamp-2 text-[11px] leading-5 text-white/65 md:text-xs">{displayPhoto.description}</p>}
+                                {displayPhoto?.specifications && <p className="line-clamp-1 text-[10px] text-white/55 md:text-[11px]">{displayPhoto.specifications}</p>}
+                              </div>
+                            </>
+                          )}
+                        </div>
                         {slot !== 'center' && (
                           <div
-                            className="pointer-events-none absolute inset-x-0 -bottom-[24%] h-[24%] overflow-hidden opacity-20"
-                            style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.65), transparent)' }}
+                            className="pointer-events-none absolute inset-x-0 top-full h-[22%] overflow-hidden opacity-15"
+                            style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}
                           >
                             <img
                               src={photo.src}
@@ -263,16 +271,6 @@ export default function PortfolioPage() {
                               className="h-full w-full origin-top scale-y-[-1] object-cover"
                             />
                           </div>
-                        )}
-                        {slot === 'center' && (
-                          <>
-                            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/72 to-transparent" />
-                            <div className="pointer-events-none absolute bottom-3 left-3 max-w-[76%] space-y-1 text-left md:bottom-5 md:left-5">
-                              <p className="text-[11px] uppercase tracking-[0.22em] text-white/90 md:text-xs">{displayPhoto?.title || photo.title}</p>
-                              {displayPhoto?.description && <p className="line-clamp-2 text-[11px] leading-5 text-white/65 md:text-xs">{displayPhoto.description}</p>}
-                              {displayPhoto?.specifications && <p className="line-clamp-1 text-[10px] text-white/55 md:text-[11px]">{displayPhoto.specifications}</p>}
-                            </div>
-                          </>
                         )}
                       </button>
                     ))}
@@ -292,7 +290,7 @@ export default function PortfolioPage() {
               )}
             </div>
 
-            <div className="relative left-1/2 mt-16 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pt-3 pb-4 lg:mt-20">
+            <div className="relative left-1/2 mt-20 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pt-3 pb-4 lg:mt-24">
               <div className="flex min-w-max items-stretch gap-3 pr-3">
                 {albums.map((album) => (
                   <button
