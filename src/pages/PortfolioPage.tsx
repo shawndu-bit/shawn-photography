@@ -55,21 +55,8 @@ function getLoopedIndex(index: number, total: number) {
   return (index + total) % total
 }
 
-const EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)'
-
-function panelTransform(position: 'center' | 'left' | 'right' | 'offLeft' | 'offRight') {
-  if (position === 'center') return 'translateX(0%) translateZ(26px) rotateY(0deg) scale(1)'
-  if (position === 'left') return 'translateX(-54%) translateZ(-125px) rotateY(30deg) scale(0.93)'
-  if (position === 'right') return 'translateX(54%) translateZ(-125px) rotateY(-30deg) scale(0.93)'
-  if (position === 'offLeft') return 'translateX(-90%) translateZ(-240px) rotateY(34deg) scale(0.82)'
-  return 'translateX(90%) translateZ(-240px) rotateY(-34deg) scale(0.82)'
-}
-
-function panelOpacity(position: 'center' | 'left' | 'right' | 'offLeft' | 'offRight') {
-  if (position === 'center') return 1
-  if (position === 'left' || position === 'right') return 0.78
-  return 0
-}
+const STAGE_EASE = 'cubic-bezier(0.25, 0.9, 0.25, 1)'
+const STAGE_DURATION = 800
 
 export default function PortfolioPage() {
   const { siteContent } = useSiteContentContext()
@@ -79,7 +66,8 @@ export default function PortfolioPage() {
   const [activePhotoIndex, setActivePhotoIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
-  const [direction, setDirection] = useState<Direction | null>(null)
+  const [stageRotateY, setStageRotateY] = useState(0)
+  const [stageTransitionEnabled, setStageTransitionEnabled] = useState(true)
 
   const activeAlbum = albums.find((album) => album.id === activeAlbumId) ?? albums[0] ?? null
   const activePhotos = activeAlbum?.photos ?? []
@@ -87,40 +75,40 @@ export default function PortfolioPage() {
   const canNavigate = photoCount > 1
 
   const currentPhoto = activePhotos[activePhotoIndex] ?? null
-
-  const prevIndex = getLoopedIndex(activePhotoIndex - 1, photoCount)
-  const nextIndex = getLoopedIndex(activePhotoIndex + 1, photoCount)
-  const nextNextIndex = getLoopedIndex(activePhotoIndex + 2, photoCount)
-  const prevPrevIndex = getLoopedIndex(activePhotoIndex - 2, photoCount)
-
-  const leftPhoto = activePhotos[prevIndex] ?? null
-  const centerPhoto = currentPhoto
-  const rightPhoto = activePhotos[nextIndex] ?? null
-  const incomingRightPhoto = activePhotos[nextNextIndex] ?? null
-  const incomingLeftPhoto = activePhotos[prevPrevIndex] ?? null
+  const prevPhoto = activePhotos[getLoopedIndex(activePhotoIndex - 1, photoCount)] ?? null
+  const nextPhoto = activePhotos[getLoopedIndex(activePhotoIndex + 1, photoCount)] ?? null
 
   useEffect(() => {
     if (!activeAlbum) return
     setActivePhotoIndex((prev) => getLoopedIndex(prev, activeAlbum.photos.length))
     setIsAnimating(false)
-    setDirection(null)
+    setStageRotateY(0)
+    setStageTransitionEnabled(false)
+    requestAnimationFrame(() => setStageTransitionEnabled(true))
   }, [activeAlbum])
 
-  const triggerMove = useCallback((dir: Direction) => {
+  const rotateStage = useCallback((dir: Direction) => {
     if (!canNavigate || isAnimating) return
 
-    setDirection(dir)
     setIsAnimating(true)
+    setStageTransitionEnabled(true)
+    setStageRotateY(dir === 'next' ? -58 : 58)
 
     window.setTimeout(() => {
       setActivePhotoIndex((prev) => getLoopedIndex(prev + (dir === 'next' ? 1 : -1), photoCount))
-      setIsAnimating(false)
-      setDirection(null)
-    }, 520)
+      setStageTransitionEnabled(false)
+      setStageRotateY(0)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setStageTransitionEnabled(true)
+          setIsAnimating(false)
+        })
+      })
+    }, STAGE_DURATION)
   }, [canNavigate, isAnimating, photoCount])
 
-  const goPrev = useCallback(() => triggerMove('prev'), [triggerMove])
-  const goNext = useCallback(() => triggerMove('next'), [triggerMove])
+  const goPrev = useCallback(() => rotateStage('prev'), [rotateStage])
+  const goNext = useCallback(() => rotateStage('next'), [rotateStage])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -160,148 +148,72 @@ export default function PortfolioPage() {
           </header>
 
           <div className="grid flex-1 grid-rows-[5fr_1fr] gap-4 md:gap-5">
-            <div className="relative min-h-0" style={{ perspective: '1600px' }}>
-              {centerPhoto ? (
+            <div className="relative min-h-0">
+              {currentPhoto ? (
                 <>
-                  <div className="relative hidden h-full w-full lg:block" style={{ transformStyle: 'preserve-3d' }}>
-                    {leftPhoto && (
-                      <button
-                        type="button"
-                        onClick={goPrev}
-                        disabled={!canNavigate || isAnimating}
-                        aria-label="Previous photo"
-                        className="absolute left-1/2 top-1/2 aspect-[16/10] w-[36%] -translate-x-1/2 -translate-y-1/2 overflow-hidden"
-                        style={{
-                          transform: panelTransform(
-                            isAnimating && direction === 'prev'
-                              ? 'offLeft'
-                              : isAnimating && direction === 'next'
-                                ? 'offLeft'
-                                : 'left',
-                          ),
-                          opacity: panelOpacity(
-                            isAnimating && direction === 'prev'
-                              ? 'offLeft'
-                              : isAnimating && direction === 'next'
-                                ? 'offLeft'
-                                : 'left',
-                          ),
-                          zIndex: 15,
-                          transition: `transform 520ms ${EASE}, opacity 520ms ${EASE}`,
-                        }}
-                      >
-                        <img src={leftPhoto.thumbnailSrc || leftPhoto.src} alt={leftPhoto.alt} className="h-full w-full object-cover brightness-[0.52]" />
-                        <div className="pointer-events-none absolute inset-0 bg-black/30" />
-                      </button>
-                    )}
-
-                    {rightPhoto && (
-                      <button
-                        type="button"
-                        onClick={goNext}
-                        disabled={!canNavigate || isAnimating}
-                        aria-label="Next photo"
-                        className="absolute left-1/2 top-1/2 aspect-[16/10] w-[36%] -translate-x-1/2 -translate-y-1/2 overflow-hidden"
-                        style={{
-                          transform: panelTransform(
-                            isAnimating && direction === 'next'
-                              ? 'center'
-                              : isAnimating && direction === 'prev'
-                                ? 'offRight'
-                                : 'right',
-                          ),
-                          opacity: panelOpacity(
-                            isAnimating && direction === 'next'
-                              ? 'center'
-                              : isAnimating && direction === 'prev'
-                                ? 'offRight'
-                                : 'right',
-                          ),
-                          zIndex: isAnimating && direction === 'next' ? 30 : 15,
-                          transition: `transform 520ms ${EASE}, opacity 520ms ${EASE}`,
-                        }}
-                      >
-                        <img src={rightPhoto.thumbnailSrc || rightPhoto.src} alt={rightPhoto.alt} className="h-full w-full object-cover brightness-[0.52]" />
-                        <div className="pointer-events-none absolute inset-0 bg-black/30" />
-                      </button>
-                    )}
-
-                    {incomingRightPhoto && isAnimating && direction === 'next' && (
-                      <div
-                        className="absolute left-1/2 top-1/2 aspect-[16/10] w-[36%] -translate-x-1/2 -translate-y-1/2 overflow-hidden"
-                        style={{
-                          transform: panelTransform('right'),
-                          opacity: panelOpacity('right'),
-                          zIndex: 12,
-                          transition: `transform 520ms ${EASE}, opacity 520ms ${EASE}`,
-                        }}
-                      >
-                        <img src={incomingRightPhoto.thumbnailSrc || incomingRightPhoto.src} alt={incomingRightPhoto.alt} className="h-full w-full object-cover brightness-[0.5]" />
-                        <div className="pointer-events-none absolute inset-0 bg-black/30" />
-                      </div>
-                    )}
-
-                    {incomingLeftPhoto && isAnimating && direction === 'prev' && (
-                      <div
-                        className="absolute left-1/2 top-1/2 aspect-[16/10] w-[36%] -translate-x-1/2 -translate-y-1/2 overflow-hidden"
-                        style={{
-                          transform: panelTransform('left'),
-                          opacity: panelOpacity('left'),
-                          zIndex: 12,
-                          transition: `transform 520ms ${EASE}, opacity 520ms ${EASE}`,
-                        }}
-                      >
-                        <img src={incomingLeftPhoto.thumbnailSrc || incomingLeftPhoto.src} alt={incomingLeftPhoto.alt} className="h-full w-full object-cover brightness-[0.5]" />
-                        <div className="pointer-events-none absolute inset-0 bg-black/30" />
-                      </div>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => setLightboxOpen(true)}
-                      className="group absolute left-1/2 top-1/2 aspect-[16/10] w-[58%] -translate-x-1/2 -translate-y-1/2 cursor-zoom-in overflow-hidden"
+                  <div className="relative hidden h-full w-full items-center justify-center lg:flex" style={{ perspective: '1800px', perspectiveOrigin: '50% 50%' }}>
+                    <div
+                      className="relative h-full w-full"
                       style={{
-                        transform: panelTransform(
-                          isAnimating && direction === 'next'
-                            ? 'left'
-                            : isAnimating && direction === 'prev'
-                              ? 'right'
-                              : 'center',
-                        ),
-                        opacity: panelOpacity(
-                          isAnimating && direction === 'next'
-                            ? 'left'
-                            : isAnimating && direction === 'prev'
-                              ? 'right'
-                              : 'center',
-                        ),
-                        zIndex: 35,
-                        transition: `transform 520ms ${EASE}, opacity 520ms ${EASE}`,
+                        transformStyle: 'preserve-3d',
+                        transform: `rotateY(${stageRotateY}deg)`,
+                        transition: stageTransitionEnabled ? `transform ${STAGE_DURATION}ms ${STAGE_EASE}` : 'none',
                       }}
-                      aria-label="Open image in lightbox"
-                      disabled={isAnimating}
                     >
-                      <img
-                        src={centerPhoto.src}
-                        alt={centerPhoto.alt}
-                        className="h-full w-full object-cover"
-                      />
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/72 to-transparent" />
-                      <div className="pointer-events-none absolute bottom-3 left-3 max-w-[76%] space-y-1 text-left md:bottom-5 md:left-5">
-                        <p className="text-[11px] uppercase tracking-[0.22em] text-white/90 md:text-xs">{centerPhoto.title}</p>
-                        {centerPhoto.description && (
-                          <p className="line-clamp-2 text-[11px] leading-5 text-white/65 md:text-xs">{centerPhoto.description}</p>
-                        )}
-                        {centerPhoto.specifications && (
-                          <p className="line-clamp-1 text-[10px] text-white/55 md:text-[11px]">{centerPhoto.specifications}</p>
-                        )}
-                      </div>
-                    </button>
+                      {prevPhoto && (
+                        <button
+                          type="button"
+                          onClick={goPrev}
+                          disabled={!canNavigate || isAnimating}
+                          className="absolute left-1/2 top-1/2 aspect-[16/10] w-[42%] -translate-x-1/2 -translate-y-1/2 overflow-hidden"
+                          style={{ transform: 'rotateY(-58deg) translateZ(420px)', zIndex: 20 }}
+                          aria-label="Previous photo"
+                        >
+                          <img src={prevPhoto.thumbnailSrc || prevPhoto.src} alt={prevPhoto.alt} className="h-full w-full object-cover brightness-[0.56]" />
+                          <div className="pointer-events-none absolute inset-0 bg-black/28" />
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => !isAnimating && setLightboxOpen(true)}
+                        className="absolute left-1/2 top-1/2 aspect-[16/10] w-[64%] -translate-x-1/2 -translate-y-1/2 cursor-zoom-in overflow-hidden"
+                        style={{ transform: 'rotateY(0deg) translateZ(520px)', zIndex: 40 }}
+                        aria-label="Open image in lightbox"
+                        disabled={isAnimating}
+                      >
+                        <img src={currentPhoto.src} alt={currentPhoto.alt} className="h-full w-full object-cover" />
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/72 to-transparent" />
+                        <div className="pointer-events-none absolute bottom-3 left-3 max-w-[76%] space-y-1 text-left md:bottom-5 md:left-5">
+                          <p className="text-[11px] uppercase tracking-[0.22em] text-white/90 md:text-xs">{currentPhoto.title}</p>
+                          {currentPhoto.description && (
+                            <p className="line-clamp-2 text-[11px] leading-5 text-white/65 md:text-xs">{currentPhoto.description}</p>
+                          )}
+                          {currentPhoto.specifications && (
+                            <p className="line-clamp-1 text-[10px] text-white/55 md:text-[11px]">{currentPhoto.specifications}</p>
+                          )}
+                        </div>
+                      </button>
+
+                      {nextPhoto && (
+                        <button
+                          type="button"
+                          onClick={goNext}
+                          disabled={!canNavigate || isAnimating}
+                          className="absolute left-1/2 top-1/2 aspect-[16/10] w-[42%] -translate-x-1/2 -translate-y-1/2 overflow-hidden"
+                          style={{ transform: 'rotateY(58deg) translateZ(420px)', zIndex: 20 }}
+                          aria-label="Next photo"
+                        >
+                          <img src={nextPhoto.thumbnailSrc || nextPhoto.src} alt={nextPhoto.alt} className="h-full w-full object-cover brightness-[0.56]" />
+                          <div className="pointer-events-none absolute inset-0 bg-black/28" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="relative h-full lg:hidden">
                     <button type="button" onClick={() => setLightboxOpen(true)} className="h-full w-full overflow-hidden" aria-label="Open image in lightbox">
-                      <img src={centerPhoto.src} alt={centerPhoto.alt} className="h-full max-h-[72vh] w-full object-contain" />
+                      <img src={currentPhoto.src} alt={currentPhoto.alt} className="h-full max-h-[74vh] w-full object-contain" />
                     </button>
                   </div>
 
