@@ -117,7 +117,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(-420px,-30vw,-360px), 0, -90px) rotateY(30deg) scale(0.9)',
       opacity: 1,
       zIndex: 25,
-      filter: 'brightness(0.96)',
+      filter: 'brightness(0.88)',
     }
   }
 
@@ -128,7 +128,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(360px,30vw,420px), 0, -90px) rotateY(-30deg) scale(0.9)',
       opacity: 1,
       zIndex: 25,
-      filter: 'brightness(0.96)',
+      filter: 'brightness(0.88)',
     }
   }
 
@@ -139,7 +139,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(-700px,-48vw,-600px), 0, -180px) rotateY(42deg) scale(0.76)',
       opacity: 0.82,
       zIndex: 15,
-      filter: 'brightness(0.86)',
+      filter: 'brightness(0.75)',
     }
   }
 
@@ -149,7 +149,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
     transform: 'translate(-50%, -50%) translate3d(clamp(600px,48vw,700px), 0, -180px) rotateY(-42deg) scale(0.76)',
     opacity: 0.82,
     zIndex: 15,
-    filter: 'brightness(0.86)',
+    filter: 'brightness(0.75)',
   }
 }
 
@@ -279,7 +279,7 @@ export default function PortfolioPage() {
               )}
             </div>
 
-            <div className="relative left-1/2 mt-14 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pb-3 lg:mt-16">
+            <div className="relative left-1/2 mt-16 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pt-3 pb-4 lg:mt-20">
               <div className="flex min-w-max items-stretch gap-3 pr-3">
                 {albums.map((album) => (
                   <button
