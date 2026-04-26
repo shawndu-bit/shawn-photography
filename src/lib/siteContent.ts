@@ -11,6 +11,19 @@ function normalizeCategory(category: string | undefined) {
 }
 
 export function mergeSiteContent(parsed: Partial<SiteContent>): SiteContent {
+  const defaultAlbumDetails = defaultSiteContent.portfolio?.albumDetails ?? {}
+  const parsedAlbumDetails = parsed.portfolio?.albumDetails ?? {}
+  const mergedAlbumDetails = Object.entries(parsedAlbumDetails).reduce<Record<string, NonNullable<SiteContent['portfolio']>['albumDetails'][string]>>(
+    (acc, [albumId, detail]) => {
+      acc[albumId] = {
+        ...(defaultAlbumDetails[albumId] ?? {}),
+        ...detail,
+      }
+      return acc
+    },
+    { ...defaultAlbumDetails },
+  )
+
   const mergedPhotos = (parsed.photos ?? defaultSiteContent.photos).map((photo) => ({
     ...photo,
     category: normalizeCategory(photo.category),
@@ -52,6 +65,11 @@ export function mergeSiteContent(parsed: Partial<SiteContent>): SiteContent {
       ...parsed.contact,
     },
     blog: normalizeBlogSettings(parsed.blog, defaultSiteContent.blog),
+    portfolio: {
+      ...defaultSiteContent.portfolio,
+      ...parsed.portfolio,
+      albumDetails: mergedAlbumDetails,
+    },
     socialLinks: parsed.socialLinks ?? defaultSiteContent.socialLinks,
     blogPosts: normalizeBlogPosts(parsed.blogPosts, defaultSiteContent.blogPosts),
     photos: mergedPhotos,

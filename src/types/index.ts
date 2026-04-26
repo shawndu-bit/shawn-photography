@@ -123,11 +123,27 @@ export interface SiteSectionVisibility {
   contact: boolean
 }
 
+export interface PortfolioAlbumDetail {
+  eyebrow?: string
+  title?: string
+  subtitle?: string
+  body?: string
+  contactLabel?: string
+  contactHref?: string
+  blogLabel?: string
+  blogHref?: string
+}
+
+export interface PortfolioContent {
+  albumDetails?: Record<string, PortfolioAlbumDetail>
+}
+
 export interface SiteContent {
   hero: HeroContent
   about: AboutContent
   contact: ContactContent
   blog: BlogContent
+  portfolio?: PortfolioContent
   socialLinks: SocialLink[]
   blogPosts: BlogPost[]
   photos: Photo[]
