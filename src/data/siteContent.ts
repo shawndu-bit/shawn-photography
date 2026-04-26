@@ -33,7 +33,7 @@ export const defaultSiteContent: SiteContent = {
       contactButtonText: 'Contact Me',
       contactButtonLink: '/#contact',
       portfolioButtonText: 'View Portfolio',
-      portfolioButtonLink: '/#portfolio',
+      portfolioButtonLink: '/portfolio',
       backLinkText: 'Back to Home',
       backLinkUrl: '/',
       gear: {
