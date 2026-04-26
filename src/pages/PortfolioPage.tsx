@@ -12,12 +12,7 @@ interface Album {
   cover: Photo | null
 }
 
-type Direction = 'next' | 'prev'
-
-interface TransitionState {
-  dir: Direction
-  fromIndex: number
-}
+type Slot = 'farLeft' | 'left' | 'center' | 'right' | 'farRight'
 
 const CATEGORY_LABELS: Record<string, string> = {
   mountains: 'Mountains',
@@ -27,8 +22,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   city: 'City',
 }
 
-const STAGE_DURATION = 760
-const STAGE_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)'
+const TRANSITION_MS = 720
 
 function getAlbumName(category: string) {
   return CATEGORY_LABELS[category] ?? category.replace(/_/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase())
@@ -52,32 +46,109 @@ function createAlbums(photos: Photo[]) {
     cover: categoryPhotos[0] ?? null,
   }))
 
-  return [{ id: 'featured', name: 'Featured Works', photos: featured, cover: featured[0] ?? null }, ...categoryAlbums].filter((a) => a.photos.length > 0)
+  return [{ id: 'featured', name: 'Featured Works', photos: featured, cover: featured[0] ?? null }, ...categoryAlbums].filter((album) => album.photos.length > 0)
 }
 
-function getLoopedIndex(index: number, total: number) {
-  if (total <= 0) return 0
-  return (index + total) % total
+function rotateNext(list: Photo[]) {
+  if (list.length <= 1) return list
+  return [...list.slice(1), list[0]]
 }
 
-function panelTransform(position: 'left' | 'center' | 'right') {
-  if (position === 'left') return 'translate(-50%, -50%) translateX(-36%) translateZ(-170px) rotateY(36deg) scale(0.82)'
-  if (position === 'right') return 'translate(-50%, -50%) translateX(36%) translateZ(-170px) rotateY(-36deg) scale(0.82)'
-  return 'translate(-50%, -50%) translateX(0) translateZ(110px) rotateY(0deg) scale(1)'
+function rotatePrev(list: Photo[]) {
+  if (list.length <= 1) return list
+  return [list[list.length - 1], ...list.slice(0, -1)]
 }
 
-function stageRotation(dir: Direction, active: boolean, layer: 'outgoing' | 'incoming') {
-  const start = dir === 'next' ? 0 : 0
-  const end = dir === 'next' ? -48 : 48
-  if (layer === 'outgoing') return active ? end : start
-  return active ? 0 : -end
+function getVisiblePanels(order: Photo[]) {
+  const n = order.length
+  if (n === 0) return [] as Array<{ photo: Photo; slot: Slot }>
+  if (n === 1) return [{ photo: order[0], slot: 'center' as const }]
+  if (n === 2) return [{ photo: order[0], slot: 'center' as const }, { photo: order[1], slot: 'right' as const }]
+  if (n === 3) {
+    return [
+      { photo: order[2], slot: 'left' as const },
+      { photo: order[0], slot: 'center' as const },
+      { photo: order[1], slot: 'right' as const },
+    ]
+  }
+  if (n === 4) {
+    return [
+      { photo: order[3], slot: 'farLeft' as const },
+      { photo: order[0], slot: 'center' as const },
+      { photo: order[1], slot: 'right' as const },
+      { photo: order[2], slot: 'farRight' as const },
+    ]
+  }
+
+  return [
+    { photo: order[n - 2], slot: 'farLeft' as const },
+    { photo: order[n - 1], slot: 'left' as const },
+    { photo: order[0], slot: 'center' as const },
+    { photo: order[1], slot: 'right' as const },
+    { photo: order[2], slot: 'farRight' as const },
+  ]
 }
 
-function triplet(photos: Photo[], index: number) {
+function getPanelStyle(slot: Slot): React.CSSProperties {
+  const base: React.CSSProperties = {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    transformOrigin: 'center center',
+    transition: `transform ${TRANSITION_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity ${TRANSITION_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1), filter ${TRANSITION_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`,
+  }
+
+  if (slot === 'center') {
+    return {
+      ...base,
+      width: 'min(900px, 68vw)',
+      transform: 'translate(-50%, -50%) translate3d(0, 0, 120px) rotateY(0deg) scale(1)',
+      opacity: 1,
+      zIndex: 40,
+      filter: 'brightness(1)',
+    }
+  }
+
+  if (slot === 'left') {
+    return {
+      ...base,
+      width: 'min(520px, 38vw)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(-280px,-22vw,-220px), 0, -120px) rotateY(22deg) scale(0.86)',
+      opacity: 0.66,
+      zIndex: 25,
+      filter: 'brightness(0.7)',
+    }
+  }
+
+  if (slot === 'right') {
+    return {
+      ...base,
+      width: 'min(520px, 38vw)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(220px,22vw,280px), 0, -120px) rotateY(-22deg) scale(0.86)',
+      opacity: 0.66,
+      zIndex: 25,
+      filter: 'brightness(0.7)',
+    }
+  }
+
+  if (slot === 'farLeft') {
+    return {
+      ...base,
+      width: 'min(420px, 30vw)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(-520px,-37vw,-420px), 0, -220px) rotateY(32deg) scale(0.72)',
+      opacity: 0.35,
+      zIndex: 15,
+      filter: 'brightness(0.55)',
+    }
+  }
+
   return {
-    left: photos[getLoopedIndex(index - 1, photos.length)] ?? null,
-    center: photos[getLoopedIndex(index, photos.length)] ?? null,
-    right: photos[getLoopedIndex(index + 1, photos.length)] ?? null,
+    ...base,
+    width: 'min(420px, 30vw)',
+    transform: 'translate(-50%, -50%) translate3d(clamp(420px,37vw,520px), 0, -220px) rotateY(-32deg) scale(0.72)',
+    opacity: 0.35,
+    zIndex: 15,
+    filter: 'brightness(0.55)',
   }
 }
 
@@ -86,43 +157,37 @@ export default function PortfolioPage() {
   const albums = useMemo(() => createAlbums(siteContent.photos), [siteContent.photos])
 
   const [activeAlbumId, setActiveAlbumId] = useState('featured')
-  const [activePhotoIndex, setActivePhotoIndex] = useState(0)
+  const [carouselOrder, setCarouselOrder] = useState<Photo[]>([])
   const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [transition, setTransition] = useState<TransitionState | null>(null)
-  const [transitionActive, setTransitionActive] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
 
   const activeAlbum = albums.find((album) => album.id === activeAlbumId) ?? albums[0] ?? null
-  const activePhotos = activeAlbum?.photos ?? []
-  const photoCount = activePhotos.length
-  const canNavigate = photoCount > 1
-  const isAnimating = transition !== null
-
-  const currentPhoto = activePhotos[activePhotoIndex] ?? null
 
   useEffect(() => {
-    if (!activeAlbum) return
-    setActivePhotoIndex((prev) => getLoopedIndex(prev, activeAlbum.photos.length))
-    setTransition(null)
-    setTransitionActive(false)
+    if (!activeAlbum) {
+      setCarouselOrder([])
+      return
+    }
+    setCarouselOrder(activeAlbum.photos)
+    setIsAnimating(false)
   }, [activeAlbum])
 
-  const triggerMove = useCallback((dir: Direction) => {
+  const currentPhoto = carouselOrder[0] ?? null
+  const canNavigate = carouselOrder.length > 1
+
+  const goNext = useCallback(() => {
     if (!canNavigate || isAnimating) return
+    setIsAnimating(true)
+    setCarouselOrder((prev) => rotateNext(prev))
+    window.setTimeout(() => setIsAnimating(false), TRANSITION_MS)
+  }, [canNavigate, isAnimating])
 
-    setTransition({ dir, fromIndex: activePhotoIndex })
-    setTransitionActive(false)
-
-    requestAnimationFrame(() => setTransitionActive(true))
-
-    window.setTimeout(() => {
-      setActivePhotoIndex((prev) => getLoopedIndex(prev + (dir === 'next' ? 1 : -1), photoCount))
-      setTransition(null)
-      setTransitionActive(false)
-    }, STAGE_DURATION)
-  }, [canNavigate, isAnimating, activePhotoIndex, photoCount])
-
-  const goPrev = useCallback(() => triggerMove('prev'), [triggerMove])
-  const goNext = useCallback(() => triggerMove('next'), [triggerMove])
+  const goPrev = useCallback(() => {
+    if (!canNavigate || isAnimating) return
+    setIsAnimating(true)
+    setCarouselOrder((prev) => rotatePrev(prev))
+    window.setTimeout(() => setIsAnimating(false), TRANSITION_MS)
+  }, [canNavigate, isAnimating])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -130,14 +195,11 @@ export default function PortfolioPage() {
       if (event.key === 'ArrowRight') goNext()
       if (event.key === 'Escape') setLightboxOpen(false)
     }
-
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [goNext, goPrev])
 
-  const baseTriplet = triplet(activePhotos, activePhotoIndex)
-  const incomingIndex = transition ? getLoopedIndex(transition.fromIndex + (transition.dir === 'next' ? 1 : -1), photoCount) : activePhotoIndex
-  const incomingTriplet = triplet(activePhotos, incomingIndex)
+  const panels = getVisiblePanels(carouselOrder)
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -163,53 +225,33 @@ export default function PortfolioPage() {
               {currentPhoto ? (
                 <>
                   <div className="relative hidden h-[clamp(360px,56vh,720px)] w-full max-w-[1360px] overflow-visible lg:mx-auto lg:block" style={{ perspective: '1400px', perspectiveOrigin: '50% 50%' }}>
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        transformStyle: 'preserve-3d',
-                        transform: `rotateY(${transition ? stageRotation(transition.dir, transitionActive, 'outgoing') : 0}deg)`,
-                        transition: `transform ${STAGE_DURATION}ms ${STAGE_EASE}`,
-                        opacity: transition ? (transitionActive ? 0.12 : 1) : 1,
-                      }}
-                    >
-                      {baseTriplet.left && (
-                        <button type="button" onClick={goPrev} disabled={!canNavigate || isAnimating} className="absolute left-1/2 top-1/2 aspect-[16/10] overflow-hidden" style={{ width: 'min(44vw, 580px)', transform: panelTransform('left'), zIndex: 10 }} aria-label="Previous photo">
-                          <img src={baseTriplet.left.thumbnailSrc || baseTriplet.left.src} alt={baseTriplet.left.alt} className="h-full w-full object-cover brightness-[0.58]" />
-                        </button>
-                      )}
-                      {baseTriplet.center && (
-                        <button type="button" onClick={() => !isAnimating && setLightboxOpen(true)} disabled={isAnimating} className="absolute left-1/2 top-1/2 aspect-[16/10] cursor-zoom-in overflow-hidden" style={{ width: 'min(68vw, 980px)', transform: panelTransform('center'), zIndex: 20 }} aria-label="Open image in lightbox">
-                          <img src={baseTriplet.center.src} alt={baseTriplet.center.alt} className="h-full w-full object-cover" />
-                          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/72 to-transparent" />
-                          <div className="pointer-events-none absolute bottom-3 left-3 max-w-[76%] space-y-1 text-left md:bottom-5 md:left-5">
-                            <p className="text-[11px] uppercase tracking-[0.22em] text-white/90 md:text-xs">{baseTriplet.center.title}</p>
-                            {baseTriplet.center.description && <p className="line-clamp-2 text-[11px] leading-5 text-white/65 md:text-xs">{baseTriplet.center.description}</p>}
-                            {baseTriplet.center.specifications && <p className="line-clamp-1 text-[10px] text-white/55 md:text-[11px]">{baseTriplet.center.specifications}</p>}
-                          </div>
-                        </button>
-                      )}
-                      {baseTriplet.right && (
-                        <button type="button" onClick={goNext} disabled={!canNavigate || isAnimating} className="absolute left-1/2 top-1/2 aspect-[16/10] overflow-hidden" style={{ width: 'min(44vw, 580px)', transform: panelTransform('right'), zIndex: 10 }} aria-label="Next photo">
-                          <img src={baseTriplet.right.thumbnailSrc || baseTriplet.right.src} alt={baseTriplet.right.alt} className="h-full w-full object-cover brightness-[0.58]" />
-                        </button>
-                      )}
-                    </div>
-
-                    {transition && (
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          transformStyle: 'preserve-3d',
-                          transform: `rotateY(${stageRotation(transition.dir, transitionActive, 'incoming')}deg)`,
-                          transition: `transform ${STAGE_DURATION}ms ${STAGE_EASE}`,
-                          opacity: transitionActive ? 1 : 0.18,
+                    {panels.map(({ photo, slot }) => (
+                      <button
+                        key={photo.id}
+                        type="button"
+                        onClick={() => {
+                          if (slot === 'center' && !isAnimating) setLightboxOpen(true)
+                          if (slot === 'left') goPrev()
+                          if (slot === 'right') goNext()
                         }}
+                        disabled={isAnimating && slot !== 'center'}
+                        className={`aspect-[4/3] overflow-hidden ${slot === 'center' ? 'cursor-zoom-in' : slot === 'left' || slot === 'right' ? 'cursor-pointer' : 'pointer-events-none'}`}
+                        style={getPanelStyle(slot)}
+                        aria-label={slot === 'center' ? 'Open image in lightbox' : `View ${photo.title}`}
                       >
-                        {incomingTriplet.left && <div className="absolute left-1/2 top-1/2 aspect-[16/10] overflow-hidden" style={{ width: 'min(44vw, 580px)', transform: panelTransform('left'), zIndex: 10 }}><img src={incomingTriplet.left.thumbnailSrc || incomingTriplet.left.src} alt={incomingTriplet.left.alt} className="h-full w-full object-cover brightness-[0.58]" /></div>}
-                        {incomingTriplet.center && <div className="absolute left-1/2 top-1/2 aspect-[16/10] overflow-hidden" style={{ width: 'min(68vw, 980px)', transform: panelTransform('center'), zIndex: 20 }}><img src={incomingTriplet.center.src} alt={incomingTriplet.center.alt} className="h-full w-full object-cover" /></div>}
-                        {incomingTriplet.right && <div className="absolute left-1/2 top-1/2 aspect-[16/10] overflow-hidden" style={{ width: 'min(44vw, 580px)', transform: panelTransform('right'), zIndex: 10 }}><img src={incomingTriplet.right.thumbnailSrc || incomingTriplet.right.src} alt={incomingTriplet.right.alt} className="h-full w-full object-cover brightness-[0.58]" /></div>}
-                      </div>
-                    )}
+                        <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
+                        {slot === 'center' && (
+                          <>
+                            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/72 to-transparent" />
+                            <div className="pointer-events-none absolute bottom-3 left-3 max-w-[76%] space-y-1 text-left md:bottom-5 md:left-5">
+                              <p className="text-[11px] uppercase tracking-[0.22em] text-white/90 md:text-xs">{photo.title}</p>
+                              {photo.description && <p className="line-clamp-2 text-[11px] leading-5 text-white/65 md:text-xs">{photo.description}</p>}
+                              {photo.specifications && <p className="line-clamp-1 text-[10px] text-white/55 md:text-[11px]">{photo.specifications}</p>}
+                            </div>
+                          </>
+                        )}
+                      </button>
+                    ))}
                   </div>
 
                   <div className="relative h-full lg:hidden">
@@ -229,7 +271,15 @@ export default function PortfolioPage() {
             <div className="min-h-0 overflow-x-auto pb-1">
               <div className="flex min-w-max items-stretch gap-3 pr-2">
                 {albums.map((album) => (
-                  <button key={album.id} type="button" onClick={() => { setActiveAlbumId(album.id); setActivePhotoIndex(0) }} className={`group relative aspect-[4/3] h-full min-h-[92px] w-[160px] overflow-hidden rounded-xl border transition md:w-[180px] lg:w-[210px] ${activeAlbumId === album.id ? 'scale-[1.02] border-white/70 brightness-110 shadow-[0_0_0_1px_rgba(255,255,255,0.15)]' : 'border-white/20 brightness-[0.78] hover:border-white/45 hover:brightness-95'}`}>
+                  <button
+                    key={album.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveAlbumId(album.id)
+                      setCarouselOrder(album.photos)
+                    }}
+                    className={`group relative aspect-[4/3] h-full min-h-[92px] w-[160px] overflow-hidden rounded-xl border transition md:w-[180px] lg:w-[210px] ${activeAlbumId === album.id ? 'scale-[1.02] border-white/70 brightness-110 shadow-[0_0_0_1px_rgba(255,255,255,0.15)]' : 'border-white/20 brightness-[0.78] hover:border-white/45 hover:brightness-95'}`}
+                  >
                     {album.cover ? <img src={album.cover.thumbnailSrc || album.cover.src} alt={album.name} className="h-full w-full object-cover" /> : <div className="h-full w-full bg-white/10" />}
                     <div className="pointer-events-none absolute inset-0 bg-black/35 transition group-hover:bg-black/22" />
                     <div className="pointer-events-none absolute inset-0 grid place-items-center px-2"><p className="text-center text-[11px] uppercase tracking-[0.22em] text-white/92 md:text-xs">{album.name}</p></div>
