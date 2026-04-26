@@ -9,6 +9,7 @@ import { useAdminAuth } from './admin/hooks/useAdminAuth';
 import AboutPage from './pages/AboutPage';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
+import PortfolioPage from './pages/PortfolioPage';
 import LoginPage from './admin/pages/LoginPage';
 import DashboardPage from './admin/pages/DashboardPage';
 import HeroEditPage from './admin/pages/HeroEditPage';
@@ -45,6 +46,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/about" element={<AboutPage />} />
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/blog/:slug" element={<BlogPostPage />} />
+          <Route path="/portfolio" element={<PortfolioPage />} />
 
           <Route path="/admin/login" element={<LoginPage />} />
           <Route path="/admin" element={<DashboardPage />} />
