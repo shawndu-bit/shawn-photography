@@ -216,7 +216,7 @@ export default function PortfolioPage() {
     <div className="min-h-screen bg-black text-white">
       <SiteHeader mode="inner" />
 
-      <main className="relative isolate overflow-hidden bg-black pt-20">
+      <main className="relative isolate overflow-hidden bg-black pt-28 lg:pt-32">
         {displayPhoto && (
           <>
             <div className="pointer-events-none absolute inset-0 -z-20 bg-cover bg-center opacity-20 blur-3xl" style={{ backgroundImage: `url(${displayPhoto.thumbnailSrc || displayPhoto.src})` }} />
@@ -224,14 +224,14 @@ export default function PortfolioPage() {
           </>
         )}
 
-        <section className="w-full px-[clamp(24px,7vw,120px)] pb-12 lg:pb-16">
-          <header className="mb-14 lg:mb-16">
+        <section className="w-full min-h-[calc(100vh-5rem)] px-[clamp(24px,5.5vw,96px)] pb-16 lg:pb-20">
+          <header className="mb-20 lg:mb-24">
             <p className="mb-3 text-xs uppercase tracking-[0.5em] text-white/35">PORTFOLIO</p>
             <h1 className="font-display text-3xl leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">{activeAlbum?.name ?? 'Portfolio'}</h1>
             <p className="mt-2 text-[11px] uppercase tracking-[0.25em] text-white/45 sm:text-xs">Selected photographs across landscape, city, coast, forest, and night.</p>
           </header>
 
-          <div className="flex flex-col">
+          <div className="flex min-h-[calc(100vh-18rem)] flex-1 flex-col">
             <div className="relative">
               {currentPhoto ? (
                 <>
@@ -279,7 +279,7 @@ export default function PortfolioPage() {
               )}
             </div>
 
-            <div className="relative left-1/2 mt-14 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,7vw,120px)] pb-3 lg:mt-16">
+            <div className="relative left-1/2 mt-auto w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pb-3 pt-20 lg:pt-24">
               <div className="flex min-w-max items-stretch gap-3 pr-3">
                 {albums.map((album) => (
                   <button
