@@ -117,7 +117,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(-420px,-30vw,-360px), 0, -90px) rotateY(30deg) scale(0.9)',
       opacity: 1,
       zIndex: 25,
-      filter: 'brightness(0.88)',
+      filter: 'none',
     }
   }
 
@@ -128,7 +128,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(360px,30vw,420px), 0, -90px) rotateY(-30deg) scale(0.9)',
       opacity: 1,
       zIndex: 25,
-      filter: 'brightness(0.88)',
+      filter: 'none',
     }
   }
 
@@ -139,7 +139,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(-700px,-48vw,-600px), 0, -180px) rotateY(42deg) scale(0.76)',
       opacity: 0.82,
       zIndex: 15,
-      filter: 'brightness(0.75)',
+      filter: 'none',
     }
   }
 
@@ -149,7 +149,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
     transform: 'translate(-50%, -50%) translate3d(clamp(600px,48vw,700px), 0, -180px) rotateY(-42deg) scale(0.76)',
     opacity: 0.82,
     zIndex: 15,
-    filter: 'brightness(0.75)',
+    filter: 'none',
   }
 }
 
@@ -246,11 +246,24 @@ export default function PortfolioPage() {
                           if (slot === 'right') goNext()
                         }}
                         disabled={isAnimating && slot !== 'center'}
-                        className={`aspect-[3/2] overflow-hidden ${slot === 'center' ? 'cursor-zoom-in' : slot === 'left' || slot === 'right' ? 'cursor-pointer' : 'pointer-events-none'}`}
+                        className={`group aspect-[3/2] overflow-hidden transition-[filter,box-shadow] duration-500 ${slot === 'center' ? 'cursor-zoom-in shadow-[0_18px_50px_rgba(0,0,0,0.28)]' : slot === 'left' || slot === 'right' ? 'cursor-pointer brightness-[0.84] hover:brightness-100 shadow-[0_10px_28px_rgba(0,0,0,0.18)]' : 'pointer-events-none brightness-[0.76] hover:brightness-95 shadow-[0_10px_28px_rgba(0,0,0,0.18)]'}`}
                         style={getPanelStyle(slot)}
                         aria-label={slot === 'center' ? 'Open image in lightbox' : `View ${displayPhoto?.title || photo.title}`}
                       >
                         <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
+                        {slot !== 'center' && (
+                          <div
+                            className="pointer-events-none absolute inset-x-0 -bottom-[24%] h-[24%] overflow-hidden opacity-20"
+                            style={{ maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.65), transparent)' }}
+                          >
+                            <img
+                              src={photo.src}
+                              alt=""
+                              aria-hidden="true"
+                              className="h-full w-full origin-top scale-y-[-1] object-cover"
+                            />
+                          </div>
+                        )}
                         {slot === 'center' && (
                           <>
                             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/72 to-transparent" />
