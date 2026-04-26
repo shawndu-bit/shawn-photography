@@ -59,7 +59,7 @@ export default function SiteHeader({ mode }: SiteHeaderProps) {
             {mode === 'home' ? (
               <>
                 <li><a href="#home" className={navItemClass}>Home</a></li>
-                <li><a href="#portfolio" className={navItemClass}>Portfolio</a></li>
+                <li><Link to="/portfolio" className={navItemClass}>Portfolio</Link></li>
                 <li><Link to="/about" className={navItemClass}>About Me</Link></li>
                 <li><Link to="/blog" className={navItemClass}>Blog</Link></li>
                 <li><a href="#contact" className={navItemClass}>Contact</a></li>
@@ -67,7 +67,7 @@ export default function SiteHeader({ mode }: SiteHeaderProps) {
             ) : (
               <>
                 <li><Link to="/" className={navItemClass}>Home</Link></li>
-                <li><Link to="/#portfolio" className={navItemClass}>Portfolio</Link></li>
+                <li><Link to="/portfolio" className={navItemClass}>Portfolio</Link></li>
                 <li><Link to="/about" className={navItemClass}>About Me</Link></li>
                 <li><Link to="/blog" className={navItemClass}>Blog</Link></li>
                 <li><Link to="/#contact" className={navItemClass}>Contact</Link></li>
@@ -93,7 +93,7 @@ export default function SiteHeader({ mode }: SiteHeaderProps) {
             {mode === 'home' ? (
               <>
                 <li><a href="#home" className={navItemClass} onClick={() => setMobileOpen(false)}>Home</a></li>
-                <li><a href="#portfolio" className={navItemClass} onClick={() => setMobileOpen(false)}>Portfolio</a></li>
+                <li><Link to="/portfolio" className={navItemClass} onClick={() => setMobileOpen(false)}>Portfolio</Link></li>
                 <li><Link to="/about" className={navItemClass} onClick={() => setMobileOpen(false)}>About Me</Link></li>
                 <li><Link to="/blog" className={navItemClass} onClick={() => setMobileOpen(false)}>Blog</Link></li>
                 <li><a href="#contact" className={navItemClass} onClick={() => setMobileOpen(false)}>Contact</a></li>
@@ -101,7 +101,7 @@ export default function SiteHeader({ mode }: SiteHeaderProps) {
             ) : (
               <>
                 <li><Link to="/" className={navItemClass} onClick={() => setMobileOpen(false)}>Home</Link></li>
-                <li><Link to="/#portfolio" className={navItemClass} onClick={() => setMobileOpen(false)}>Portfolio</Link></li>
+                <li><Link to="/portfolio" className={navItemClass} onClick={() => setMobileOpen(false)}>Portfolio</Link></li>
                 <li><Link to="/about" className={navItemClass} onClick={() => setMobileOpen(false)}>About Me</Link></li>
                 <li><Link to="/#blog" className={navItemClass} onClick={() => setMobileOpen(false)}>Blog</Link></li>
                 <li><Link to="/#contact" className={navItemClass} onClick={() => setMobileOpen(false)}>Contact</Link></li>
