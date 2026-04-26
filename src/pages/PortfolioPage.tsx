@@ -224,14 +224,14 @@ export default function PortfolioPage() {
           </>
         )}
 
-        <section className="mx-auto w-full max-w-[1320px] px-3 pb-12 sm:px-5 md:px-6 lg:px-8">
-          <header className="mb-10 md:mb-12">
+        <section className="w-full px-[clamp(24px,7vw,120px)] pb-12 lg:pb-16">
+          <header className="mb-14 lg:mb-16">
             <p className="mb-3 text-xs uppercase tracking-[0.5em] text-white/35">PORTFOLIO</p>
             <h1 className="font-display text-3xl leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">{activeAlbum?.name ?? 'Portfolio'}</h1>
             <p className="mt-2 text-[11px] uppercase tracking-[0.25em] text-white/45 sm:text-xs">Selected photographs across landscape, city, coast, forest, and night.</p>
           </header>
 
-          <div className="flex flex-col gap-10 md:gap-12">
+          <div className="flex flex-col">
             <div className="relative">
               {currentPhoto ? (
                 <>
@@ -279,7 +279,7 @@ export default function PortfolioPage() {
               )}
             </div>
 
-            <div className="relative left-1/2 w-screen -translate-x-1/2 overflow-x-auto px-3 pb-3 sm:px-5 md:px-6 lg:px-8">
+            <div className="relative left-1/2 mt-14 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,7vw,120px)] pb-3 lg:mt-16">
               <div className="flex min-w-max items-stretch gap-3 pr-3">
                 {albums.map((album) => (
                   <button
