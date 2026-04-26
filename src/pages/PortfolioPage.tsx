@@ -111,46 +111,52 @@ export default function PortfolioPage() {
           </>
         )}
 
-        <section className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-[1700px] flex-col px-3 pb-5 sm:px-5 md:px-8 lg:px-10">
-          <header className="mb-3 flex-none md:mb-5">
-            <p className="text-[10px] uppercase tracking-[0.38em] text-white/45">Portfolio</p>
-            <h1 className="mt-2 text-xl tracking-[0.08em] text-white/92 md:text-2xl">{activeAlbum?.name ?? 'Portfolio'}</h1>
+        <section className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-[1760px] flex-col px-3 pb-5 sm:px-5 md:px-8 lg:px-10">
+          <header className="mb-4 flex-none md:mb-6">
+            <p className="mb-3 text-xs uppercase tracking-[0.5em] text-white/35">PORTFOLIO</p>
+            <h1 className="font-display text-3xl leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
+              {activeAlbum?.name ?? 'Portfolio'}
+            </h1>
+            <p className="mt-2 text-[11px] uppercase tracking-[0.25em] text-white/45 sm:text-xs">
+              Selected photographs across landscape, city, coast, forest, and night.
+            </p>
           </header>
 
           <div className="grid flex-1 grid-rows-[5fr_1fr] gap-4 md:gap-5">
-            <div className="relative min-h-0">
+            <div className="relative min-h-0" style={{ perspective: '1600px' }}>
               {activePhoto ? (
-                <div className="grid h-full grid-cols-1 items-center gap-3 lg:grid-cols-[minmax(220px,1.15fr)_minmax(0,2.3fr)_minmax(220px,1.15fr)] lg:gap-4">
+                <div className="grid h-full grid-cols-1 items-center gap-2 lg:grid-cols-[minmax(260px,1.2fr)_minmax(0,2.2fr)_minmax(260px,1.2fr)] lg:gap-3" style={{ transformStyle: 'preserve-3d' }}>
                   <button
                     type="button"
                     onClick={goPrev}
                     disabled={!canNavigate}
-                    className={`group relative hidden aspect-[16/10] w-full self-center overflow-hidden rounded-xl lg:block ${
-                      canNavigate ? 'cursor-pointer opacity-75 hover:opacity-100' : 'pointer-events-none opacity-0'
+                    className={`group relative hidden aspect-[16/10] w-full self-center overflow-hidden lg:block ${
+                      canNavigate ? 'cursor-pointer opacity-80 hover:opacity-100' : 'pointer-events-none opacity-0'
                     }`}
-                    style={{ transform: 'perspective(1200px) rotateY(16deg) scale(0.95)' }}
+                    style={{ transform: 'translateX(26px) translateZ(-120px) rotateY(30deg) scale(0.94)' }}
                     aria-label="Previous photo"
                   >
                     {prevPhoto && (
                       <img
                         src={prevPhoto.thumbnailSrc || prevPhoto.src}
                         alt={prevPhoto.alt}
-                        className="h-full w-full object-cover brightness-[0.48] transition duration-500 group-hover:brightness-[0.7]"
+                        className="h-full w-full object-cover brightness-[0.5] transition duration-500 group-hover:brightness-[0.72]"
                       />
                     )}
-                    <div className="pointer-events-none absolute inset-0 bg-black/35" />
+                    <div className="pointer-events-none absolute inset-0 bg-black/30" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setLightboxOpen(true)}
-                    className="group relative h-full min-h-[52vh] w-full cursor-zoom-in overflow-hidden"
+                    className="group relative h-full min-h-[56vh] w-full cursor-zoom-in overflow-hidden"
+                    style={{ transform: 'translateZ(20px)' }}
                     aria-label="Open image in lightbox"
                   >
                     <img
                       src={activePhoto.src}
                       alt={activePhoto.alt}
-                      className="mx-auto h-full max-h-[64vh] w-full object-contain transition duration-500 group-hover:scale-[1.006] lg:max-h-[66vh]"
+                      className="mx-auto h-full max-h-[70vh] w-full object-contain transition duration-500 group-hover:scale-[1.006] lg:max-h-[72vh]"
                     />
 
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/72 to-transparent md:h-36" />
@@ -169,20 +175,20 @@ export default function PortfolioPage() {
                     type="button"
                     onClick={goNext}
                     disabled={!canNavigate}
-                    className={`group relative hidden aspect-[16/10] w-full self-center overflow-hidden rounded-xl lg:block ${
-                      canNavigate ? 'cursor-pointer opacity-75 hover:opacity-100' : 'pointer-events-none opacity-0'
+                    className={`group relative hidden aspect-[16/10] w-full self-center overflow-hidden lg:block ${
+                      canNavigate ? 'cursor-pointer opacity-80 hover:opacity-100' : 'pointer-events-none opacity-0'
                     }`}
-                    style={{ transform: 'perspective(1200px) rotateY(-16deg) scale(0.95)' }}
+                    style={{ transform: 'translateX(-26px) translateZ(-120px) rotateY(-30deg) scale(0.94)' }}
                     aria-label="Next photo"
                   >
                     {nextPhoto && (
                       <img
                         src={nextPhoto.thumbnailSrc || nextPhoto.src}
                         alt={nextPhoto.alt}
-                        className="h-full w-full object-cover brightness-[0.48] transition duration-500 group-hover:brightness-[0.7]"
+                        className="h-full w-full object-cover brightness-[0.5] transition duration-500 group-hover:brightness-[0.72]"
                       />
                     )}
-                    <div className="pointer-events-none absolute inset-0 bg-black/35" />
+                    <div className="pointer-events-none absolute inset-0 bg-black/30" />
                   </button>
 
                   <button
