@@ -151,7 +151,7 @@ export default function PortfolioPage() {
             <div className="relative min-h-0">
               {currentPhoto ? (
                 <>
-                  <div className="relative hidden h-full w-full items-center justify-center lg:flex" style={{ perspective: '1800px', perspectiveOrigin: '50% 50%' }}>
+                  <div className="relative hidden h-full w-full items-center justify-center overflow-visible lg:flex" style={{ perspective: '1800px', perspectiveOrigin: '50% 50%' }}>
                     <div
                       className="relative h-full w-full"
                       style={{
@@ -165,8 +165,8 @@ export default function PortfolioPage() {
                           type="button"
                           onClick={goPrev}
                           disabled={!canNavigate || isAnimating}
-                          className="absolute left-1/2 top-1/2 aspect-[16/10] w-[42%] -translate-x-1/2 -translate-y-1/2 overflow-hidden"
-                          style={{ transform: 'rotateY(-58deg) translateZ(420px)', zIndex: 20 }}
+                          className="absolute left-1/2 top-1/2 aspect-[16/10] w-[42%] overflow-hidden"
+                          style={{ transform: 'translate(-50%, -50%) rotateY(-58deg) translateZ(420px)', transformOrigin: 'center center', zIndex: 20 }}
                           aria-label="Previous photo"
                         >
                           <img src={prevPhoto.thumbnailSrc || prevPhoto.src} alt={prevPhoto.alt} className="h-full w-full object-cover brightness-[0.56]" />
@@ -177,8 +177,8 @@ export default function PortfolioPage() {
                       <button
                         type="button"
                         onClick={() => !isAnimating && setLightboxOpen(true)}
-                        className="absolute left-1/2 top-1/2 aspect-[16/10] w-[64%] -translate-x-1/2 -translate-y-1/2 cursor-zoom-in overflow-hidden"
-                        style={{ transform: 'rotateY(0deg) translateZ(520px)', zIndex: 40 }}
+                        className="absolute left-1/2 top-1/2 aspect-[16/10] w-[64%] cursor-zoom-in overflow-hidden"
+                        style={{ transform: 'translate(-50%, -50%) rotateY(0deg) translateZ(520px)', transformOrigin: 'center center', zIndex: 40 }}
                         aria-label="Open image in lightbox"
                         disabled={isAnimating}
                       >
@@ -200,8 +200,8 @@ export default function PortfolioPage() {
                           type="button"
                           onClick={goNext}
                           disabled={!canNavigate || isAnimating}
-                          className="absolute left-1/2 top-1/2 aspect-[16/10] w-[42%] -translate-x-1/2 -translate-y-1/2 overflow-hidden"
-                          style={{ transform: 'rotateY(58deg) translateZ(420px)', zIndex: 20 }}
+                          className="absolute left-1/2 top-1/2 aspect-[16/10] w-[42%] overflow-hidden"
+                          style={{ transform: 'translate(-50%, -50%) rotateY(58deg) translateZ(420px)', transformOrigin: 'center center', zIndex: 20 }}
                           aria-label="Next photo"
                         >
                           <img src={nextPhoto.thumbnailSrc || nextPhoto.src} alt={nextPhoto.alt} className="h-full w-full object-cover brightness-[0.56]" />
