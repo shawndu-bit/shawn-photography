@@ -97,57 +97,64 @@ export default function PortfolioPage() {
   }, [goNext, goPrev])
 
   return (
-    <div className="min-h-screen bg-carbon text-white">
+    <div className="min-h-screen bg-black text-white">
       <SiteHeader mode="inner" />
 
-      <main className="relative isolate overflow-hidden pt-16 md:pt-18">
+      <main className="relative isolate overflow-hidden bg-black pt-20">
         {activePhoto && (
           <>
             <div
-              className="pointer-events-none absolute inset-0 -z-20 bg-cover bg-center opacity-35 blur-3xl"
+              className="pointer-events-none absolute inset-0 -z-20 bg-cover bg-center opacity-20 blur-3xl"
               style={{ backgroundImage: `url(${activePhoto.thumbnailSrc || activePhoto.src})` }}
             />
-            <div className="pointer-events-none absolute inset-0 -z-10 bg-black/65" />
+            <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-black/85 via-black/80 to-black/95" />
           </>
         )}
 
-        <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[1800px] flex-col px-2 pb-4 sm:px-3 md:px-6 lg:px-8">
-          <div className="grid flex-1 grid-rows-[5fr_1fr] gap-3 md:gap-4">
-            <div className="relative min-h-0 overflow-hidden">
+        <section className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-[1700px] flex-col px-3 pb-5 sm:px-5 md:px-8 lg:px-10">
+          <header className="mb-3 flex-none md:mb-5">
+            <p className="text-[10px] uppercase tracking-[0.38em] text-white/45">Portfolio</p>
+            <h1 className="mt-2 text-xl tracking-[0.08em] text-white/92 md:text-2xl">{activeAlbum?.name ?? 'Portfolio'}</h1>
+          </header>
+
+          <div className="grid flex-1 grid-rows-[5fr_1fr] gap-4 md:gap-5">
+            <div className="relative min-h-0">
               {activePhoto ? (
-                <div className="grid h-full grid-cols-1 items-center gap-4 xl:grid-cols-[minmax(140px,0.65fr)_minmax(0,4fr)_minmax(140px,0.65fr)]">
+                <div className="grid h-full grid-cols-1 items-center gap-3 lg:grid-cols-[minmax(220px,1.15fr)_minmax(0,2.3fr)_minmax(220px,1.15fr)] lg:gap-4">
                   <button
                     type="button"
                     onClick={goPrev}
                     disabled={!canNavigate}
-                    className={`group hidden h-[58vh] self-center overflow-hidden xl:block ${
+                    className={`group relative hidden aspect-[16/10] w-full self-center overflow-hidden rounded-xl lg:block ${
                       canNavigate ? 'cursor-pointer opacity-75 hover:opacity-100' : 'pointer-events-none opacity-0'
                     }`}
+                    style={{ transform: 'perspective(1200px) rotateY(16deg) scale(0.95)' }}
                     aria-label="Previous photo"
                   >
                     {prevPhoto && (
                       <img
                         src={prevPhoto.thumbnailSrc || prevPhoto.src}
                         alt={prevPhoto.alt}
-                        className="h-full w-full -rotate-3 object-cover brightness-[0.38] transition duration-500 group-hover:brightness-[0.58]"
+                        className="h-full w-full object-cover brightness-[0.48] transition duration-500 group-hover:brightness-[0.7]"
                       />
                     )}
+                    <div className="pointer-events-none absolute inset-0 bg-black/35" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setLightboxOpen(true)}
-                    className="group relative h-full min-h-[58vh] w-full cursor-zoom-in overflow-hidden bg-black/30"
+                    className="group relative h-full min-h-[52vh] w-full cursor-zoom-in overflow-hidden"
                     aria-label="Open image in lightbox"
                   >
                     <img
                       src={activePhoto.src}
                       alt={activePhoto.alt}
-                      className="h-full w-full object-contain transition duration-500 group-hover:scale-[1.005]"
+                      className="mx-auto h-full max-h-[64vh] w-full object-contain transition duration-500 group-hover:scale-[1.006] lg:max-h-[66vh]"
                     />
 
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/70 to-transparent md:h-44" />
-                    <div className="pointer-events-none absolute bottom-3 left-3 max-w-[75%] space-y-1 text-left md:bottom-5 md:left-6">
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/72 to-transparent md:h-36" />
+                    <div className="pointer-events-none absolute bottom-3 left-3 max-w-[76%] space-y-1 text-left md:bottom-5 md:left-5">
                       <p className="text-[11px] uppercase tracking-[0.22em] text-white/90 md:text-xs">{activePhoto.title}</p>
                       {activePhoto.description && (
                         <p className="line-clamp-2 text-[11px] leading-5 text-white/65 md:text-xs">{activePhoto.description}</p>
@@ -162,25 +169,27 @@ export default function PortfolioPage() {
                     type="button"
                     onClick={goNext}
                     disabled={!canNavigate}
-                    className={`group hidden h-[58vh] self-center overflow-hidden xl:block ${
+                    className={`group relative hidden aspect-[16/10] w-full self-center overflow-hidden rounded-xl lg:block ${
                       canNavigate ? 'cursor-pointer opacity-75 hover:opacity-100' : 'pointer-events-none opacity-0'
                     }`}
+                    style={{ transform: 'perspective(1200px) rotateY(-16deg) scale(0.95)' }}
                     aria-label="Next photo"
                   >
                     {nextPhoto && (
                       <img
                         src={nextPhoto.thumbnailSrc || nextPhoto.src}
                         alt={nextPhoto.alt}
-                        className="h-full w-full rotate-3 object-cover brightness-[0.38] transition duration-500 group-hover:brightness-[0.58]"
+                        className="h-full w-full object-cover brightness-[0.48] transition duration-500 group-hover:brightness-[0.7]"
                       />
                     )}
+                    <div className="pointer-events-none absolute inset-0 bg-black/35" />
                   </button>
 
                   <button
                     type="button"
                     onClick={goPrev}
                     disabled={!canNavigate}
-                    className="absolute left-2 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white/90 backdrop-blur md:left-4"
+                    className="absolute left-1 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white/90 backdrop-blur md:left-2"
                     aria-label="Previous photo"
                   >
                     <ChevronLeft className="h-5 w-5" />
@@ -190,7 +199,7 @@ export default function PortfolioPage() {
                     type="button"
                     onClick={goNext}
                     disabled={!canNavigate}
-                    className="absolute right-2 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white/90 backdrop-blur md:right-4"
+                    className="absolute right-1 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white/90 backdrop-blur md:right-2"
                     aria-label="Next photo"
                   >
                     <ChevronRight className="h-5 w-5" />
@@ -211,10 +220,10 @@ export default function PortfolioPage() {
                       setActiveAlbumId(album.id)
                       setActivePhotoIndex(0)
                     }}
-                    className={`group relative aspect-[4/3] h-full min-h-[90px] w-[160px] overflow-hidden border transition md:w-[180px] lg:w-[210px] ${
+                    className={`group relative aspect-[4/3] h-full min-h-[92px] w-[160px] overflow-hidden rounded-xl border transition md:w-[180px] lg:w-[210px] ${
                       activeAlbumId === album.id
-                        ? 'scale-[1.01] border-white/60 brightness-110'
-                        : 'border-white/20 brightness-75 hover:border-white/40 hover:brightness-95'
+                        ? 'scale-[1.02] border-white/70 brightness-110 shadow-[0_0_0_1px_rgba(255,255,255,0.15)]'
+                        : 'border-white/20 brightness-[0.78] hover:border-white/45 hover:brightness-95'
                     }`}
                   >
                     {album.cover ? (
@@ -227,9 +236,9 @@ export default function PortfolioPage() {
                       <div className="h-full w-full bg-white/10" />
                     )}
 
-                    <div className="pointer-events-none absolute inset-0 bg-black/35 transition group-hover:bg-black/25" />
+                    <div className="pointer-events-none absolute inset-0 bg-black/35 transition group-hover:bg-black/22" />
                     <div className="pointer-events-none absolute inset-0 grid place-items-center px-2">
-                      <p className="text-center text-[11px] uppercase tracking-[0.2em] text-white/92 md:text-xs">{album.name}</p>
+                      <p className="text-center text-[11px] uppercase tracking-[0.22em] text-white/92 md:text-xs">{album.name}</p>
                     </div>
                   </button>
                 ))}
