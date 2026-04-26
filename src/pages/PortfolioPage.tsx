@@ -238,14 +238,14 @@ export default function PortfolioPage() {
   }, [activeAlbum?.name, activeAlbumId, siteContent.portfolio?.albumDetails])
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-carbon text-white">
       <SiteHeader mode="inner" />
 
-      <main className="relative isolate overflow-hidden bg-black pt-28 lg:pt-32">
+      <main className="relative isolate overflow-hidden bg-carbon pt-28 lg:pt-32">
         {displayPhoto && (
           <>
             <div className="pointer-events-none absolute inset-0 -z-20 bg-cover bg-center opacity-20 blur-3xl" style={{ backgroundImage: `url(${displayPhoto.thumbnailSrc || displayPhoto.src})` }} />
-            <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-black/85 via-black/80 to-black/95" />
+            <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#1a1a1a]/90 via-[#171717]/82 to-[#1a1a1a]/95" />
           </>
         )}
 
