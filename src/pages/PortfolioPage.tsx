@@ -22,7 +22,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   city: 'City',
 }
 
-const TRANSITION_MS = 720
+const TRANSITION_MS = 860
 
 function getAlbumName(category: string) {
   return CATEGORY_LABELS[category] ?? category.replace(/_/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase())
@@ -95,14 +95,15 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
     left: '50%',
     top: '50%',
     transformOrigin: 'center center',
-    transition: `transform ${TRANSITION_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity ${TRANSITION_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1), filter ${TRANSITION_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`,
+    transition: `transform ${TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), filter ${TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+    willChange: 'transform, opacity, filter',
   }
 
   if (slot === 'center') {
     return {
       ...base,
-      width: 'min(900px, 68vw)',
-      transform: 'translate(-50%, -50%) translate3d(0, 0, 120px) rotateY(0deg) scale(1)',
+      width: 'min(860px, 60vw)',
+      transform: 'translate(-50%, -50%) translate3d(0, 0, 110px) rotateY(0deg) scale(1)',
       opacity: 1,
       zIndex: 40,
       filter: 'brightness(1)',
@@ -112,43 +113,43 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
   if (slot === 'left') {
     return {
       ...base,
-      width: 'min(520px, 38vw)',
-      transform: 'translate(-50%, -50%) translate3d(clamp(-280px,-22vw,-220px), 0, -120px) rotateY(22deg) scale(0.86)',
-      opacity: 0.66,
+      width: 'min(440px, 32vw)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(-420px,-30vw,-360px), 0, -90px) rotateY(30deg) scale(0.88)',
+      opacity: 0.82,
       zIndex: 25,
-      filter: 'brightness(0.7)',
+      filter: 'brightness(0.82)',
     }
   }
 
   if (slot === 'right') {
     return {
       ...base,
-      width: 'min(520px, 38vw)',
-      transform: 'translate(-50%, -50%) translate3d(clamp(220px,22vw,280px), 0, -120px) rotateY(-22deg) scale(0.86)',
-      opacity: 0.66,
+      width: 'min(440px, 32vw)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(360px,30vw,420px), 0, -90px) rotateY(-30deg) scale(0.88)',
+      opacity: 0.82,
       zIndex: 25,
-      filter: 'brightness(0.7)',
+      filter: 'brightness(0.82)',
     }
   }
 
   if (slot === 'farLeft') {
     return {
       ...base,
-      width: 'min(420px, 30vw)',
-      transform: 'translate(-50%, -50%) translate3d(clamp(-520px,-37vw,-420px), 0, -220px) rotateY(32deg) scale(0.72)',
-      opacity: 0.35,
+      width: 'min(320px, 24vw)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(-700px,-48vw,-600px), 0, -180px) rotateY(42deg) scale(0.72)',
+      opacity: 0.42,
       zIndex: 15,
-      filter: 'brightness(0.55)',
+      filter: 'brightness(0.65)',
     }
   }
 
   return {
     ...base,
-    width: 'min(420px, 30vw)',
-    transform: 'translate(-50%, -50%) translate3d(clamp(420px,37vw,520px), 0, -220px) rotateY(-32deg) scale(0.72)',
-    opacity: 0.35,
+    width: 'min(320px, 24vw)',
+    transform: 'translate(-50%, -50%) translate3d(clamp(600px,48vw,700px), 0, -180px) rotateY(-42deg) scale(0.72)',
+    opacity: 0.42,
     zIndex: 15,
-    filter: 'brightness(0.55)',
+    filter: 'brightness(0.65)',
   }
 }
 
@@ -160,6 +161,7 @@ export default function PortfolioPage() {
   const [carouselOrder, setCarouselOrder] = useState<Photo[]>([])
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [displayPhoto, setDisplayPhoto] = useState<Photo | null>(null)
 
   const activeAlbum = albums.find((album) => album.id === activeAlbumId) ?? albums[0] ?? null
 
@@ -169,6 +171,7 @@ export default function PortfolioPage() {
       return
     }
     setCarouselOrder(activeAlbum.photos)
+    setDisplayPhoto(activeAlbum.photos[0] ?? null)
     setIsAnimating(false)
   }, [activeAlbum])
 
@@ -177,17 +180,25 @@ export default function PortfolioPage() {
 
   const goNext = useCallback(() => {
     if (!canNavigate || isAnimating) return
+    const nextDisplay = carouselOrder[1] ?? carouselOrder[0] ?? null
     setIsAnimating(true)
     setCarouselOrder((prev) => rotateNext(prev))
-    window.setTimeout(() => setIsAnimating(false), TRANSITION_MS)
-  }, [canNavigate, isAnimating])
+    window.setTimeout(() => {
+      setDisplayPhoto(nextDisplay)
+      setIsAnimating(false)
+    }, TRANSITION_MS)
+  }, [canNavigate, isAnimating, carouselOrder])
 
   const goPrev = useCallback(() => {
     if (!canNavigate || isAnimating) return
+    const nextDisplay = carouselOrder[carouselOrder.length - 1] ?? carouselOrder[0] ?? null
     setIsAnimating(true)
     setCarouselOrder((prev) => rotatePrev(prev))
-    window.setTimeout(() => setIsAnimating(false), TRANSITION_MS)
-  }, [canNavigate, isAnimating])
+    window.setTimeout(() => {
+      setDisplayPhoto(nextDisplay)
+      setIsAnimating(false)
+    }, TRANSITION_MS)
+  }, [canNavigate, isAnimating, carouselOrder])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -206,9 +217,9 @@ export default function PortfolioPage() {
       <SiteHeader mode="inner" />
 
       <main className="relative isolate overflow-hidden bg-black pt-20">
-        {currentPhoto && (
+        {displayPhoto && (
           <>
-            <div className="pointer-events-none absolute inset-0 -z-20 bg-cover bg-center opacity-20 blur-3xl" style={{ backgroundImage: `url(${currentPhoto.thumbnailSrc || currentPhoto.src})` }} />
+            <div className="pointer-events-none absolute inset-0 -z-20 bg-cover bg-center opacity-20 blur-3xl" style={{ backgroundImage: `url(${displayPhoto.thumbnailSrc || displayPhoto.src})` }} />
             <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-black/85 via-black/80 to-black/95" />
           </>
         )}
@@ -224,7 +235,7 @@ export default function PortfolioPage() {
             <div className="relative min-h-0">
               {currentPhoto ? (
                 <>
-                  <div className="relative hidden h-[clamp(360px,56vh,720px)] w-full max-w-[1360px] overflow-visible lg:mx-auto lg:block" style={{ perspective: '1400px', perspectiveOrigin: '50% 50%' }}>
+                  <div className="relative hidden h-[clamp(340px,48vh,600px)] w-full max-w-[1320px] overflow-visible lg:mx-auto lg:block" style={{ perspective: '1400px', perspectiveOrigin: '50% 50%' }}>
                     {panels.map(({ photo, slot }) => (
                       <button
                         key={photo.id}
@@ -235,18 +246,18 @@ export default function PortfolioPage() {
                           if (slot === 'right') goNext()
                         }}
                         disabled={isAnimating && slot !== 'center'}
-                        className={`aspect-[4/3] overflow-hidden ${slot === 'center' ? 'cursor-zoom-in' : slot === 'left' || slot === 'right' ? 'cursor-pointer' : 'pointer-events-none'}`}
+                        className={`aspect-[3/2] overflow-hidden ${slot === 'center' ? 'cursor-zoom-in' : slot === 'left' || slot === 'right' ? 'cursor-pointer' : 'pointer-events-none'}`}
                         style={getPanelStyle(slot)}
-                        aria-label={slot === 'center' ? 'Open image in lightbox' : `View ${photo.title}`}
+                        aria-label={slot === 'center' ? 'Open image in lightbox' : `View ${displayPhoto?.title || photo.title}`}
                       >
                         <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
                         {slot === 'center' && (
                           <>
                             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/72 to-transparent" />
                             <div className="pointer-events-none absolute bottom-3 left-3 max-w-[76%] space-y-1 text-left md:bottom-5 md:left-5">
-                              <p className="text-[11px] uppercase tracking-[0.22em] text-white/90 md:text-xs">{photo.title}</p>
-                              {photo.description && <p className="line-clamp-2 text-[11px] leading-5 text-white/65 md:text-xs">{photo.description}</p>}
-                              {photo.specifications && <p className="line-clamp-1 text-[10px] text-white/55 md:text-[11px]">{photo.specifications}</p>}
+                              <p className="text-[11px] uppercase tracking-[0.22em] text-white/90 md:text-xs">{displayPhoto?.title || photo.title}</p>
+                              {displayPhoto?.description && <p className="line-clamp-2 text-[11px] leading-5 text-white/65 md:text-xs">{displayPhoto.description}</p>}
+                              {displayPhoto?.specifications && <p className="line-clamp-1 text-[10px] text-white/55 md:text-[11px]">{displayPhoto.specifications}</p>}
                             </div>
                           </>
                         )}
@@ -277,6 +288,7 @@ export default function PortfolioPage() {
                     onClick={() => {
                       setActiveAlbumId(album.id)
                       setCarouselOrder(album.photos)
+                      setDisplayPhoto(album.photos[0] ?? null)
                     }}
                     className={`group relative aspect-[4/3] h-full min-h-[92px] w-[160px] overflow-hidden rounded-xl border transition md:w-[180px] lg:w-[210px] ${activeAlbumId === album.id ? 'scale-[1.02] border-white/70 brightness-110 shadow-[0_0_0_1px_rgba(255,255,255,0.15)]' : 'border-white/20 brightness-[0.78] hover:border-white/45 hover:brightness-95'}`}
                   >
