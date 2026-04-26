@@ -31,11 +31,8 @@ function createAlbums(photos: Photo[]) {
   photos.forEach((photo) => {
     const key = photo.category || 'mountains'
     const bucket = categoryMap.get(key)
-    if (bucket) {
-      bucket.push(photo)
-    } else {
-      categoryMap.set(key, [photo])
-    }
+    if (bucket) bucket.push(photo)
+    else categoryMap.set(key, [photo])
   })
 
   const categoryAlbums: Album[] = [...categoryMap.entries()].map(([category, categoryPhotos]) => ({
@@ -46,12 +43,7 @@ function createAlbums(photos: Photo[]) {
   }))
 
   return [
-    {
-      id: 'featured',
-      name: 'Featured Works',
-      photos: featured,
-      cover: featured[0] ?? null,
-    },
+    { id: 'featured', name: 'Featured Works', photos: featured, cover: featured[0] ?? null },
     ...categoryAlbums,
   ].filter((album) => album.photos.length > 0)
 }
@@ -64,6 +56,7 @@ function getLoopedIndex(index: number, total: number) {
 export default function PortfolioPage() {
   const { siteContent } = useSiteContentContext()
   const albums = useMemo(() => createAlbums(siteContent.photos), [siteContent.photos])
+
   const [activeAlbumId, setActiveAlbumId] = useState('featured')
   const [activePhotoIndex, setActivePhotoIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -71,16 +64,16 @@ export default function PortfolioPage() {
   const activeAlbum = albums.find((album) => album.id === activeAlbumId) ?? albums[0] ?? null
   const activePhotos = activeAlbum?.photos ?? []
   const activePhoto = activePhotos[activePhotoIndex] ?? null
+  const photoCount = activePhotos.length
+  const canNavigate = photoCount > 1
+
+  const prevPhoto = canNavigate ? activePhotos[getLoopedIndex(activePhotoIndex - 1, photoCount)] : null
+  const nextPhoto = canNavigate ? activePhotos[getLoopedIndex(activePhotoIndex + 1, photoCount)] : null
 
   useEffect(() => {
     if (!activeAlbum) return
     setActivePhotoIndex((prev) => getLoopedIndex(prev, activeAlbum.photos.length))
   }, [activeAlbum])
-
-  const photoCount = activePhotos.length
-  const canNavigate = photoCount > 1
-  const prevPhoto = photoCount > 1 ? activePhotos[getLoopedIndex(activePhotoIndex - 1, photoCount)] : null
-  const nextPhoto = photoCount > 1 ? activePhotos[getLoopedIndex(activePhotoIndex + 1, photoCount)] : null
 
   const goPrev = useCallback(() => {
     if (!canNavigate) return
@@ -107,135 +100,140 @@ export default function PortfolioPage() {
     <div className="min-h-screen bg-carbon text-white">
       <SiteHeader mode="inner" />
 
-      <main className="relative overflow-hidden pt-24 md:pt-28">
+      <main className="relative isolate overflow-hidden pt-16 md:pt-18">
         {activePhoto && (
           <>
             <div
-              className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-center opacity-35 blur-2xl"
+              className="pointer-events-none absolute inset-0 -z-20 bg-cover bg-center opacity-35 blur-3xl"
               style={{ backgroundImage: `url(${activePhoto.thumbnailSrc || activePhoto.src})` }}
             />
-            <div className="pointer-events-none absolute inset-0 -z-10 bg-black/70" />
+            <div className="pointer-events-none absolute inset-0 -z-10 bg-black/65" />
           </>
         )}
 
-        <section className="mx-auto max-w-[1300px] px-4 pb-10 md:px-8 lg:px-12">
-          <p className="text-[11px] uppercase tracking-[0.35em] text-white/45">Portfolio</p>
-          <h1 className="mt-3 text-2xl font-medium tracking-[0.08em] text-white md:text-3xl">{activeAlbum?.name ?? 'Portfolio'}</h1>
+        <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[1800px] flex-col px-2 pb-4 sm:px-3 md:px-6 lg:px-8">
+          <div className="grid flex-1 grid-rows-[5fr_1fr] gap-3 md:gap-4">
+            <div className="relative min-h-0 overflow-hidden">
+              {activePhoto ? (
+                <div className="grid h-full grid-cols-1 items-center gap-4 xl:grid-cols-[minmax(140px,0.65fr)_minmax(0,4fr)_minmax(140px,0.65fr)]">
+                  <button
+                    type="button"
+                    onClick={goPrev}
+                    disabled={!canNavigate}
+                    className={`group hidden h-[58vh] self-center overflow-hidden xl:block ${
+                      canNavigate ? 'cursor-pointer opacity-75 hover:opacity-100' : 'pointer-events-none opacity-0'
+                    }`}
+                    aria-label="Previous photo"
+                  >
+                    {prevPhoto && (
+                      <img
+                        src={prevPhoto.thumbnailSrc || prevPhoto.src}
+                        alt={prevPhoto.alt}
+                        className="h-full w-full -rotate-3 object-cover brightness-[0.38] transition duration-500 group-hover:brightness-[0.58]"
+                      />
+                    )}
+                  </button>
 
-          {activePhoto ? (
-            <div className="mt-8 rounded-3xl border border-white/10 bg-black/35 p-4 md:p-6">
-              <div className="relative grid items-center gap-4 md:grid-cols-[minmax(120px,1fr)_minmax(360px,2.8fr)_minmax(120px,1fr)] md:gap-6">
-                <button
-                  type="button"
-                  onClick={goPrev}
-                  disabled={!canNavigate}
-                  className={`group hidden overflow-hidden rounded-2xl border border-white/10 bg-black/50 md:block ${
-                    canNavigate ? 'cursor-pointer' : 'pointer-events-none opacity-0'
-                  }`}
-                  aria-label="Previous photo"
-                >
-                  {prevPhoto && (
+                  <button
+                    type="button"
+                    onClick={() => setLightboxOpen(true)}
+                    className="group relative h-full min-h-[58vh] w-full cursor-zoom-in overflow-hidden bg-black/30"
+                    aria-label="Open image in lightbox"
+                  >
                     <img
-                      src={prevPhoto.thumbnailSrc || prevPhoto.src}
-                      alt={prevPhoto.alt}
-                      className="h-44 w-full -translate-x-1 rotate-[-4deg] object-cover opacity-45 transition duration-500 group-hover:opacity-70"
+                      src={activePhoto.src}
+                      alt={activePhoto.alt}
+                      className="h-full w-full object-contain transition duration-500 group-hover:scale-[1.005]"
                     />
-                  )}
-                </button>
 
-                <button
-                  type="button"
-                  className="group relative overflow-hidden rounded-2xl border border-white/15 bg-black/40"
-                  onClick={() => setLightboxOpen(true)}
-                  aria-label="Open image in lightbox"
-                >
-                  <img
-                    src={activePhoto.thumbnailSrc || activePhoto.src}
-                    alt={activePhoto.alt}
-                    className="max-h-[70vh] w-full object-contain transition duration-500 group-hover:scale-[1.01]"
-                  />
-                </button>
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/70 to-transparent md:h-44" />
+                    <div className="pointer-events-none absolute bottom-3 left-3 max-w-[75%] space-y-1 text-left md:bottom-5 md:left-6">
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-white/90 md:text-xs">{activePhoto.title}</p>
+                      {activePhoto.description && (
+                        <p className="line-clamp-2 text-[11px] leading-5 text-white/65 md:text-xs">{activePhoto.description}</p>
+                      )}
+                      {activePhoto.specifications && (
+                        <p className="line-clamp-1 text-[10px] text-white/55 md:text-[11px]">{activePhoto.specifications}</p>
+                      )}
+                    </div>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={goNext}
-                  disabled={!canNavigate}
-                  className={`group hidden overflow-hidden rounded-2xl border border-white/10 bg-black/50 md:block ${
-                    canNavigate ? 'cursor-pointer' : 'pointer-events-none opacity-0'
-                  }`}
-                  aria-label="Next photo"
-                >
-                  {nextPhoto && (
-                    <img
-                      src={nextPhoto.thumbnailSrc || nextPhoto.src}
-                      alt={nextPhoto.alt}
-                      className="h-44 w-full translate-x-1 rotate-[4deg] object-cover opacity-45 transition duration-500 group-hover:opacity-70"
-                    />
-                  )}
-                </button>
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    disabled={!canNavigate}
+                    className={`group hidden h-[58vh] self-center overflow-hidden xl:block ${
+                      canNavigate ? 'cursor-pointer opacity-75 hover:opacity-100' : 'pointer-events-none opacity-0'
+                    }`}
+                    aria-label="Next photo"
+                  >
+                    {nextPhoto && (
+                      <img
+                        src={nextPhoto.thumbnailSrc || nextPhoto.src}
+                        alt={nextPhoto.alt}
+                        className="h-full w-full rotate-3 object-cover brightness-[0.38] transition duration-500 group-hover:brightness-[0.58]"
+                      />
+                    )}
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={goPrev}
-                  disabled={!canNavigate}
-                  className="absolute left-2 top-1/2 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white/85 md:left-[30%]"
-                  aria-label="Previous photo"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
+                  <button
+                    type="button"
+                    onClick={goPrev}
+                    disabled={!canNavigate}
+                    className="absolute left-2 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white/90 backdrop-blur md:left-4"
+                    aria-label="Previous photo"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={goNext}
-                  disabled={!canNavigate}
-                  className="absolute right-2 top-1/2 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white/85 md:right-[30%]"
-                  aria-label="Next photo"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
-                <p className="text-sm tracking-[0.12em] text-white/85">{activePhoto.title}</p>
-                {activePhoto.description && <p className="text-xs leading-6 text-white/60">{activePhoto.description}</p>}
-                {activePhoto.specifications && <p className="text-[11px] text-white/45">{activePhoto.specifications}</p>}
-              </div>
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    disabled={!canNavigate}
+                    className="absolute right-2 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white/90 backdrop-blur md:right-4"
+                    aria-label="Next photo"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="grid h-full place-items-center text-sm text-white/60">No photos available.</div>
+              )}
             </div>
-          ) : (
-            <p className="mt-6 text-white/60">No photos available.</p>
-          )}
 
-          <div className="mt-8 overflow-x-auto pb-2">
-            <div className="flex min-w-max gap-3">
-              {albums.map((album) => (
-                <button
-                  key={album.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveAlbumId(album.id)
-                    setActivePhotoIndex(0)
-                  }}
-                  className={`w-[170px] overflow-hidden rounded-2xl border text-left transition ${
-                    activeAlbumId === album.id
-                      ? 'border-white/35 bg-white/[0.08]'
-                      : 'border-white/10 bg-black/35 hover:border-white/25'
-                  }`}
-                >
-                  {album.cover ? (
-                    <img
-                      src={album.cover.thumbnailSrc || album.cover.src}
-                      alt={album.name}
-                      className="h-24 w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-24 w-full bg-white/5" />
-                  )}
-                  <div className="space-y-1 p-3">
-                    <p className="text-xs uppercase tracking-[0.22em] text-white/85">{album.name}</p>
-                    <p className="text-[11px] text-white/50">{album.photos.length} photos</p>
-                  </div>
-                </button>
-              ))}
+            <div className="min-h-0 overflow-x-auto pb-1">
+              <div className="flex min-w-max items-stretch gap-3 pr-2">
+                {albums.map((album) => (
+                  <button
+                    key={album.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveAlbumId(album.id)
+                      setActivePhotoIndex(0)
+                    }}
+                    className={`group relative aspect-[4/3] h-full min-h-[90px] w-[160px] overflow-hidden border transition md:w-[180px] lg:w-[210px] ${
+                      activeAlbumId === album.id
+                        ? 'scale-[1.01] border-white/60 brightness-110'
+                        : 'border-white/20 brightness-75 hover:border-white/40 hover:brightness-95'
+                    }`}
+                  >
+                    {album.cover ? (
+                      <img
+                        src={album.cover.thumbnailSrc || album.cover.src}
+                        alt={album.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-white/10" />
+                    )}
+
+                    <div className="pointer-events-none absolute inset-0 bg-black/35 transition group-hover:bg-black/25" />
+                    <div className="pointer-events-none absolute inset-0 grid place-items-center px-2">
+                      <p className="text-center text-[11px] uppercase tracking-[0.2em] text-white/92 md:text-xs">{album.name}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -244,7 +242,12 @@ export default function PortfolioPage() {
       <Footer />
 
       {lightboxOpen && activePhoto && (
-        <div className="fixed inset-0 z-[120] bg-black/95 p-4 md:p-8" role="dialog" aria-modal="true" onClick={() => setLightboxOpen(false)}>
+        <div
+          className="fixed inset-0 z-[120] bg-black/95 p-4 md:p-8"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setLightboxOpen(false)}
+        >
           <button
             type="button"
             className="absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/5"
