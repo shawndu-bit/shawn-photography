@@ -224,18 +224,18 @@ export default function PortfolioPage() {
           </>
         )}
 
-        <section className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-[1760px] flex-col px-3 pb-5 sm:px-5 md:px-8 lg:px-10">
-          <header className="mb-4 flex-none md:mb-6">
+        <section className="mx-auto w-full max-w-[1320px] px-3 pb-6 sm:px-5 md:px-6 lg:px-8">
+          <header className="mb-8 md:mb-10">
             <p className="mb-3 text-xs uppercase tracking-[0.5em] text-white/35">PORTFOLIO</p>
             <h1 className="font-display text-3xl leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">{activeAlbum?.name ?? 'Portfolio'}</h1>
             <p className="mt-2 text-[11px] uppercase tracking-[0.25em] text-white/45 sm:text-xs">Selected photographs across landscape, city, coast, forest, and night.</p>
           </header>
 
-          <div className="grid flex-1 grid-rows-[5fr_1fr] gap-4 md:gap-5">
-            <div className="relative min-h-0">
+          <div className="flex flex-col gap-8 md:gap-9">
+            <div className="relative">
               {currentPhoto ? (
                 <>
-                  <div className="relative hidden h-[clamp(340px,48vh,600px)] w-full max-w-[1320px] overflow-visible lg:mx-auto lg:block" style={{ perspective: '1400px', perspectiveOrigin: '50% 50%' }}>
+                  <div className="relative hidden h-[clamp(340px,48vh,600px)] w-full overflow-visible lg:block" style={{ perspective: '1400px', perspectiveOrigin: '50% 50%' }}>
                     {panels.map(({ photo, slot }) => (
                       <button
                         key={photo.id}
@@ -265,21 +265,21 @@ export default function PortfolioPage() {
                     ))}
                   </div>
 
-                  <div className="relative h-full lg:hidden">
+                  <div className="relative lg:hidden">
                     <button type="button" onClick={() => setLightboxOpen(true)} className="h-full w-full overflow-hidden" aria-label="Open image in lightbox">
                       <img src={currentPhoto.src} alt={currentPhoto.alt} className="h-full max-h-[74vh] w-full object-contain" />
                     </button>
                   </div>
 
-                  <button type="button" onClick={goPrev} disabled={!canNavigate || isAnimating} className="absolute left-1 top-1/2 z-40 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white/90 backdrop-blur md:left-2" aria-label="Previous photo"><ChevronLeft className="h-5 w-5" /></button>
-                  <button type="button" onClick={goNext} disabled={!canNavigate || isAnimating} className="absolute right-1 top-1/2 z-40 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white/90 backdrop-blur md:right-2" aria-label="Next photo"><ChevronRight className="h-5 w-5" /></button>
+                  <button type="button" onClick={goPrev} disabled={!canNavigate || isAnimating} className="absolute left-3 top-1/2 z-40 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white/90 backdrop-blur" aria-label="Previous photo"><ChevronLeft className="h-5 w-5" /></button>
+                  <button type="button" onClick={goNext} disabled={!canNavigate || isAnimating} className="absolute right-3 top-1/2 z-40 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white/90 backdrop-blur" aria-label="Next photo"><ChevronRight className="h-5 w-5" /></button>
                 </>
               ) : (
                 <div className="grid h-full place-items-center text-sm text-white/60">No photos available.</div>
               )}
             </div>
 
-            <div className="min-h-0 overflow-x-auto pb-1">
+            <div className="overflow-x-auto pb-1">
               <div className="flex min-w-max items-stretch gap-3 pr-2">
                 {albums.map((album) => (
                   <button
