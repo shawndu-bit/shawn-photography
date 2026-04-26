@@ -113,43 +113,43 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
   if (slot === 'left') {
     return {
       ...base,
-      width: 'min(440px, 32vw)',
-      transform: 'translate(-50%, -50%) translate3d(clamp(-420px,-30vw,-360px), 0, -90px) rotateY(30deg) scale(0.88)',
-      opacity: 0.82,
+      width: 'min(500px, 35vw)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(-420px,-30vw,-360px), 0, -90px) rotateY(30deg) scale(0.9)',
+      opacity: 0.9,
       zIndex: 25,
-      filter: 'brightness(0.82)',
+      filter: 'brightness(0.9)',
     }
   }
 
   if (slot === 'right') {
     return {
       ...base,
-      width: 'min(440px, 32vw)',
-      transform: 'translate(-50%, -50%) translate3d(clamp(360px,30vw,420px), 0, -90px) rotateY(-30deg) scale(0.88)',
-      opacity: 0.82,
+      width: 'min(500px, 35vw)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(360px,30vw,420px), 0, -90px) rotateY(-30deg) scale(0.9)',
+      opacity: 0.9,
       zIndex: 25,
-      filter: 'brightness(0.82)',
+      filter: 'brightness(0.9)',
     }
   }
 
   if (slot === 'farLeft') {
     return {
       ...base,
-      width: 'min(320px, 24vw)',
-      transform: 'translate(-50%, -50%) translate3d(clamp(-700px,-48vw,-600px), 0, -180px) rotateY(42deg) scale(0.72)',
-      opacity: 0.42,
+      width: 'min(360px, 27vw)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(-700px,-48vw,-600px), 0, -180px) rotateY(42deg) scale(0.76)',
+      opacity: 0.55,
       zIndex: 15,
-      filter: 'brightness(0.65)',
+      filter: 'brightness(0.72)',
     }
   }
 
   return {
     ...base,
-    width: 'min(320px, 24vw)',
-    transform: 'translate(-50%, -50%) translate3d(clamp(600px,48vw,700px), 0, -180px) rotateY(-42deg) scale(0.72)',
-    opacity: 0.42,
+    width: 'min(360px, 27vw)',
+    transform: 'translate(-50%, -50%) translate3d(clamp(600px,48vw,700px), 0, -180px) rotateY(-42deg) scale(0.76)',
+    opacity: 0.55,
     zIndex: 15,
-    filter: 'brightness(0.65)',
+    filter: 'brightness(0.72)',
   }
 }
 
@@ -279,7 +279,7 @@ export default function PortfolioPage() {
               )}
             </div>
 
-            <div className="relative left-1/2 mt-auto w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pb-3 pt-20 lg:pt-24">
+            <div className="relative left-1/2 mt-auto w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pb-3 pt-14 lg:pt-16">
               <div className="flex min-w-max items-stretch gap-3 pr-3">
                 {albums.map((album) => (
                   <button
@@ -290,7 +290,7 @@ export default function PortfolioPage() {
                       setCarouselOrder(album.photos)
                       setDisplayPhoto(album.photos[0] ?? null)
                     }}
-                    className={`group relative aspect-[4/3] h-full min-h-[92px] w-[160px] overflow-hidden rounded-xl border transition md:w-[180px] lg:w-[210px] ${activeAlbumId === album.id ? 'scale-[1.02] border-white/70 brightness-110 shadow-[0_0_0_1px_rgba(255,255,255,0.15)]' : 'border-white/20 brightness-[0.78] hover:border-white/45 hover:brightness-95'}`}
+                    className={`group relative aspect-[4/3] h-full min-h-[92px] w-[160px] overflow-hidden rounded-2xl border transition md:w-[180px] lg:w-[210px] ${activeAlbumId === album.id ? 'scale-[1.02] border-white/90 brightness-115 shadow-[0_0_0_1px_rgba(255,255,255,0.35),0_8px_22px_rgba(0,0,0,0.35)]' : 'border-white/20 brightness-[0.78] hover:border-white/45 hover:brightness-95'}`}
                   >
                     {album.cover ? <img src={album.cover.thumbnailSrc || album.cover.src} alt={album.name} className="h-full w-full object-cover" /> : <div className="h-full w-full bg-white/10" />}
                     <div className="pointer-events-none absolute inset-0 bg-black/35 transition group-hover:bg-black/22" />
