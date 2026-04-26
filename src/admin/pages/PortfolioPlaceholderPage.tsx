@@ -6,11 +6,28 @@ import { defaultSiteContent } from '@/data/siteContent'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import type { PortfolioAlbumDetail } from '@/types'
 
+function mergeAlbumDetailsWithDefaults(details: Record<string, PortfolioAlbumDetail> | undefined) {
+  const defaults = defaultSiteContent.portfolio?.albumDetails ?? {}
+  const incoming = details ?? {}
+
+  const merged: Record<string, PortfolioAlbumDetail> = { ...defaults }
+  Object.entries(incoming).forEach(([albumId, detail]) => {
+    merged[albumId] = {
+      ...(defaults[albumId] ?? {}),
+      ...detail,
+    }
+  })
+
+  return merged
+}
+
 export default function PortfolioPlaceholderPage() {
   const { siteContent, saveContent } = useSiteContentContext()
   const [activeAlbumId, setActiveAlbumId] = useState('featured')
   const [albumDetails, setAlbumDetails] = useState<Record<string, PortfolioAlbumDetail>>({})
   const [dirty, setDirty] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   const albumIds = useMemo(() => {
     const categories = [...new Set(siteContent.photos.map((photo) => photo.category))]
@@ -18,7 +35,7 @@ export default function PortfolioPlaceholderPage() {
   }, [siteContent.photos])
 
   useEffect(() => {
-    setAlbumDetails(siteContent.portfolio?.albumDetails ?? defaultSiteContent.portfolio?.albumDetails ?? {})
+    setAlbumDetails(mergeAlbumDetailsWithDefaults(siteContent.portfolio?.albumDetails))
   }, [siteContent.portfolio?.albumDetails])
 
   useEffect(() => {
@@ -38,22 +55,32 @@ export default function PortfolioPlaceholderPage() {
       },
     }))
     setDirty(true)
+    setSaved(false)
   }
 
   async function handleSave() {
-    await saveContent({
-      ...siteContent,
-      portfolio: {
-        ...siteContent.portfolio,
-        albumDetails,
-      },
-    })
-    setDirty(false)
+    setSaving(true)
+    setSaved(false)
+    try {
+      const mergedAlbumDetails = mergeAlbumDetailsWithDefaults(albumDetails)
+      await saveContent({
+        ...siteContent,
+        portfolio: {
+          ...siteContent.portfolio,
+          albumDetails: mergedAlbumDetails,
+        },
+      })
+      setDirty(false)
+      setSaved(true)
+    } finally {
+      setSaving(false)
+    }
   }
 
   function handleReset() {
-    setAlbumDetails(siteContent.portfolio?.albumDetails ?? defaultSiteContent.portfolio?.albumDetails ?? {})
+    setAlbumDetails(mergeAlbumDetailsWithDefaults(siteContent.portfolio?.albumDetails))
     setDirty(false)
+    setSaved(false)
   }
 
   return (
@@ -64,6 +91,7 @@ export default function PortfolioPlaceholderPage() {
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/65">
           Edit text content shown below the public portfolio carousel for each album.
         </p>
+        {saved && <p className="mt-3 text-xs uppercase tracking-[0.2em] text-emerald-300/80">Saved</p>}
 
         <div className="mt-8 grid gap-6 xl:grid-cols-[320px_1fr]">
           <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
@@ -110,7 +138,7 @@ export default function PortfolioPlaceholderPage() {
           </section>
         </div>
       </div>
-      <SaveBar dirty={dirty} onSave={handleSave} onReset={handleReset} />
+      <SaveBar dirty={dirty} saving={saving} onSave={handleSave} onReset={handleReset} />
     </AdminLayout>
   )
 }
