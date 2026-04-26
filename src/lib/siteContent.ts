@@ -52,6 +52,14 @@ export function mergeSiteContent(parsed: Partial<SiteContent>): SiteContent {
       ...parsed.contact,
     },
     blog: normalizeBlogSettings(parsed.blog, defaultSiteContent.blog),
+    portfolio: {
+      ...defaultSiteContent.portfolio,
+      ...parsed.portfolio,
+      albumDetails: {
+        ...(defaultSiteContent.portfolio?.albumDetails ?? {}),
+        ...(parsed.portfolio?.albumDetails ?? {}),
+      },
+    },
     socialLinks: parsed.socialLinks ?? defaultSiteContent.socialLinks,
     blogPosts: normalizeBlogPosts(parsed.blogPosts, defaultSiteContent.blogPosts),
     photos: mergedPhotos,
