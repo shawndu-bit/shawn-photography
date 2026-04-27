@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import MarkdownContent from '@/components/MarkdownContent'
 import Footer from '@/components/Footer'
 import SiteHeader from '@/components/SiteHeader'
@@ -162,6 +162,8 @@ function isHashRoute(url: string) {
 
 export default function PortfolioPage() {
   const { siteContent } = useSiteContentContext()
+  const { search } = useLocation()
+  const navigate = useNavigate()
   const albums = useMemo(() => createAlbums(siteContent.photos), [siteContent.photos])
 
   const [activeAlbumId, setActiveAlbumId] = useState('featured')
@@ -171,6 +173,25 @@ export default function PortfolioPage() {
   const [displayPhoto, setDisplayPhoto] = useState<Photo | null>(null)
 
   const activeAlbum = albums.find((album) => album.id === activeAlbumId) ?? albums[0] ?? null
+  const queryAlbumId = useMemo(() => new URLSearchParams(search).get('album')?.trim() ?? '', [search])
+
+  useEffect(() => {
+    if (albums.length === 0) return
+
+    const hasFeatured = albums.some((album) => album.id === 'featured')
+    const fallbackId = hasFeatured ? 'featured' : albums[0].id
+    const nextActive = albums.some((album) => album.id === queryAlbumId) ? queryAlbumId : fallbackId
+
+    if (nextActive !== activeAlbumId) {
+      setActiveAlbumId(nextActive)
+    }
+  }, [activeAlbumId, albums, queryAlbumId])
+
+  const syncAlbumQuery = useCallback((albumId: string) => {
+    const nextParams = new URLSearchParams(search)
+    nextParams.set('album', albumId)
+    navigate(`/portfolio?${nextParams.toString()}`)
+  }, [navigate, search])
 
   useEffect(() => {
     if (!activeAlbum) {
@@ -340,6 +361,7 @@ export default function PortfolioPage() {
                       setActiveAlbumId(album.id)
                       setCarouselOrder(album.photos)
                       setDisplayPhoto(album.photos[0] ?? null)
+                      syncAlbumQuery(album.id)
                     }}
                     className={`group relative aspect-[4/3] h-full min-h-[92px] w-[160px] overflow-hidden rounded-2xl border transition md:w-[180px] lg:w-[210px] ${activeAlbumId === album.id ? 'scale-[1.02] border-white/90 ring-1 ring-white/50 brightness-115 shadow-[0_8px_22px_rgba(0,0,0,0.35)]' : 'border-white/20 brightness-[0.78] hover:border-white/45 hover:brightness-95'}`}
                   >
