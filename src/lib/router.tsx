@@ -13,6 +13,7 @@ import {
 
 interface RouterContextValue {
   pathname: string
+  search: string
   navigate: (to: string, opts?: { replace?: boolean }) => void
 }
 
@@ -31,6 +32,18 @@ function normalizePath(path: string) {
 
   if (pathname.length > 1 && pathname.endsWith('/')) return pathname.slice(0, -1)
   return pathname
+}
+
+function parseLocation(to: string) {
+  try {
+    const parsed = new URL(to, window.location.origin)
+    const pathname = normalizePath(parsed.pathname)
+    return { pathname, search: parsed.search || '' }
+  } catch {
+    const [rawPathname, rawSearch = ''] = to.split('?')
+    const pathname = normalizePath(rawPathname || '/')
+    return { pathname, search: rawSearch ? `?${rawSearch}` : '' }
+  }
 }
 
 function matchPath(routePath: string, pathname: string) {
@@ -59,29 +72,31 @@ function matchPath(routePath: string, pathname: string) {
 }
 
 export function BrowserRouter({ children }: { children: ReactNode }) {
-  const [pathname, setPathname] = useState(() => normalizePath(window.location.pathname))
+  const [locationState, setLocationState] = useState(() => parseLocation(window.location.pathname + window.location.search))
 
   useEffect(() => {
-    const onPopState = () => setPathname(normalizePath(window.location.pathname))
+    const onPopState = () => setLocationState(parseLocation(window.location.pathname + window.location.search))
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
   const value = useMemo<RouterContextValue>(
     () => ({
-      pathname,
+      pathname: locationState.pathname,
+      search: locationState.search,
       navigate(to, opts) {
-        const target = normalizePath(to)
-        if (target === pathname) return
+        const target = parseLocation(to)
+        if (target.pathname === locationState.pathname && target.search === locationState.search) return
+        const href = `${target.pathname}${target.search}`
         if (opts?.replace) {
-          window.history.replaceState({}, '', target)
+          window.history.replaceState({}, '', href)
         } else {
-          window.history.pushState({}, '', target)
+          window.history.pushState({}, '', href)
         }
-        setPathname(target)
+        setLocationState(target)
       },
     }),
-    [pathname],
+    [locationState.pathname, locationState.search],
   )
 
   return (
@@ -94,7 +109,7 @@ export function BrowserRouter({ children }: { children: ReactNode }) {
 export function useLocation() {
   const ctx = useContext(RouterContext)
   if (!ctx) throw new Error('useLocation must be used within BrowserRouter')
-  return { pathname: ctx.pathname }
+  return { pathname: ctx.pathname, search: ctx.search }
 }
 
 export function useNavigate() {

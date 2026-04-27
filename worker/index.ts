@@ -204,12 +204,13 @@ async function loadSiteContent(env: Env) {
     about: Record<string, unknown>
     contact: Record<string, unknown>
     blog: Record<string, unknown>
+    portfolio: Record<string, unknown>
     social_links: unknown[]
     blog_posts: unknown[]
     section_visibility: Record<string, unknown>
   }>(
     env,
-    `SELECT hero, about, contact, blog, social_links, blog_posts, section_visibility
+    `SELECT hero, about, contact, blog, portfolio, social_links, blog_posts, section_visibility
      FROM site_content
      WHERE id = 1`,
   )
@@ -228,6 +229,11 @@ async function loadSiteContent(env: Env) {
     about: normalizeObject(site?.about),
     contact: normalizeObject(site?.contact),
     blog: normalizeObject(site?.blog),
+    portfolio: (() => {
+      const fromColumn = normalizeObject(site?.portfolio)
+      if (Object.keys(fromColumn).length > 0) return fromColumn
+      return normalizeObject(normalizeObject(site?.about).portfolio)
+    })(),
     socialLinks: normalizeArray(site?.social_links),
     blogPosts: normalizeArray(site?.blog_posts),
     sectionVisibility: normalizeObject(site?.section_visibility),
@@ -251,6 +257,8 @@ async function saveSiteContent(env: Env, data: Record<string, unknown>) {
   const about = normalizeObject(data.about)
   const contact = normalizeObject(data.contact)
   const blog = normalizeObject(data.blog)
+  const portfolio = normalizeObject(data.portfolio)
+  const { portfolio: _legacyPortfolio, ...aboutWithoutPortfolio } = about
   const socialLinks = normalizeArray(data.socialLinks)
   const blogPosts = normalizeArray(data.blogPosts)
   const sectionVisibility = normalizeObject(data.sectionVisibility)
@@ -258,23 +266,25 @@ async function saveSiteContent(env: Env, data: Record<string, unknown>) {
 
   await neonQuery(
     env,
-    `INSERT INTO site_content (id, hero, about, contact, blog, social_links, blog_posts, section_visibility)
-     VALUES (1, $1::jsonb, $2::jsonb, $3::jsonb, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb)
+    `INSERT INTO site_content (id, hero, about, contact, blog, portfolio, social_links, blog_posts, section_visibility)
+     VALUES (1, $1::jsonb, $2::jsonb, $3::jsonb, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb, $8::jsonb)
      ON CONFLICT (id) DO UPDATE
      SET
        hero = EXCLUDED.hero,
        about = EXCLUDED.about,
        contact = EXCLUDED.contact,
        blog = EXCLUDED.blog,
+       portfolio = EXCLUDED.portfolio,
        social_links = EXCLUDED.social_links,
        blog_posts = EXCLUDED.blog_posts,
        section_visibility = EXCLUDED.section_visibility,
        updated_at = NOW()`,
     [
       JSON.stringify(hero),
-      JSON.stringify(about),
+      JSON.stringify(aboutWithoutPortfolio),
       JSON.stringify(contact),
       JSON.stringify(blog),
+      JSON.stringify(portfolio),
       JSON.stringify(socialLinks),
       JSON.stringify(blogPosts),
       JSON.stringify(sectionVisibility),
