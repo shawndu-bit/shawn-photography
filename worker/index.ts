@@ -229,7 +229,11 @@ async function loadSiteContent(env: Env) {
     about: normalizeObject(site?.about),
     contact: normalizeObject(site?.contact),
     blog: normalizeObject(site?.blog),
-    portfolio: normalizeObject(site?.portfolio),
+    portfolio: (() => {
+      const fromColumn = normalizeObject(site?.portfolio)
+      if (Object.keys(fromColumn).length > 0) return fromColumn
+      return normalizeObject(normalizeObject(site?.about).portfolio)
+    })(),
     socialLinks: normalizeArray(site?.social_links),
     blogPosts: normalizeArray(site?.blog_posts),
     sectionVisibility: normalizeObject(site?.section_visibility),
@@ -254,6 +258,7 @@ async function saveSiteContent(env: Env, data: Record<string, unknown>) {
   const contact = normalizeObject(data.contact)
   const blog = normalizeObject(data.blog)
   const portfolio = normalizeObject(data.portfolio)
+  const { portfolio: _legacyPortfolio, ...aboutWithoutPortfolio } = about
   const socialLinks = normalizeArray(data.socialLinks)
   const blogPosts = normalizeArray(data.blogPosts)
   const sectionVisibility = normalizeObject(data.sectionVisibility)
@@ -276,7 +281,7 @@ async function saveSiteContent(env: Env, data: Record<string, unknown>) {
        updated_at = NOW()`,
     [
       JSON.stringify(hero),
-      JSON.stringify(about),
+      JSON.stringify(aboutWithoutPortfolio),
       JSON.stringify(contact),
       JSON.stringify(blog),
       JSON.stringify(portfolio),

@@ -6,7 +6,7 @@ import Footer from '@/components/Footer'
 import SiteHeader from '@/components/SiteHeader'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 import { defaultSiteContent } from '@/data/siteContent'
-import type { Photo } from '@/types'
+import type { Photo, PortfolioAlbumDetail } from '@/types'
 
 interface Album {
   id: string
@@ -218,15 +218,23 @@ export default function PortfolioPage() {
   }, [goNext, goPrev])
 
   const panels = getVisiblePanels(carouselOrder)
+  const portfolioDetails = useMemo(
+    () => siteContent.portfolio?.albumDetails ?? defaultSiteContent.portfolio?.albumDetails ?? {},
+    [siteContent.portfolio?.albumDetails],
+  )
+  const getAlbumDetail = useCallback((albumId: string): PortfolioAlbumDetail => {
+    return portfolioDetails[albumId] ?? {}
+  }, [portfolioDetails])
   const albumDetail = useMemo(() => {
-    const detail = (siteContent.portfolio?.albumDetails ?? defaultSiteContent.portfolio?.albumDetails ?? {})[activeAlbumId]
+    const detail = getAlbumDetail(activeAlbumId)
+    const fallbackSubtitle = activeAlbumId === 'featured'
+      ? 'Selected photographs across landscape, city, coast, forest, and night.'
+      : 'A focused series from this portfolio.'
 
     return {
       eyebrow: detail?.eyebrow?.trim() || 'Series Notes',
       title: detail?.title?.trim() || activeAlbum?.name || 'Portfolio Series',
-      subtitle: detail?.subtitle?.trim() || (activeAlbumId === 'featured'
-        ? 'Selected photographs across landscape, city, coast, forest, and night.'
-        : 'A focused series from this portfolio.'),
+      subtitle: detail?.subtitle?.trim() || fallbackSubtitle,
       body: detail?.body?.trim() || (activeAlbumId === 'featured'
         ? 'A curated selection of photographs focused on quiet light, atmosphere, and restrained composition.'
         : 'This series brings together selected photographs from this category.'),
@@ -235,7 +243,7 @@ export default function PortfolioPage() {
       blogLabel: detail?.blogLabel?.trim() || 'Other Notes',
       blogHref: detail?.blogHref?.trim() || '/blog',
     }
-  }, [activeAlbum?.name, activeAlbumId, siteContent.portfolio?.albumDetails])
+  }, [activeAlbum?.name, activeAlbumId, getAlbumDetail])
 
   return (
     <div className="min-h-screen bg-carbon text-white">
@@ -252,8 +260,8 @@ export default function PortfolioPage() {
         <section className="w-full min-h-[calc(100vh-5rem)] px-[clamp(24px,5.5vw,96px)] pb-16 lg:pb-20">
           <header className="mb-20 lg:mb-24">
             <p className="mb-3 text-xs uppercase tracking-[0.5em] text-white/35">PORTFOLIO</p>
-            <h1 className="font-display text-3xl leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">{activeAlbum?.name ?? 'Portfolio'}</h1>
-            <p className="mt-2 text-[11px] uppercase tracking-[0.25em] text-white/45 sm:text-xs">Selected photographs across landscape, city, coast, forest, and night.</p>
+            <h1 className="font-display text-3xl leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">{albumDetail.title || activeAlbum?.name || 'Portfolio'}</h1>
+            <p className="mt-2 text-[11px] uppercase tracking-[0.25em] text-white/45 sm:text-xs">{albumDetail.subtitle}</p>
           </header>
 
           <div className="flex flex-col">
@@ -321,9 +329,12 @@ export default function PortfolioPage() {
 
             <div className="relative left-1/2 mt-20 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pt-3 pb-4 lg:mt-24">
               <div className="flex min-w-max items-stretch gap-3 pr-3">
-                {albums.map((album) => (
-                  <button
-                    key={album.id}
+                {albums.map((album) => {
+                  const detail = getAlbumDetail(album.id)
+                  const albumCardLabel = detail.albumName?.trim() || detail.title?.trim() || album.name
+                  return (
+                    <button
+                      key={album.id}
                     type="button"
                     onClick={() => {
                       setActiveAlbumId(album.id)
@@ -334,9 +345,10 @@ export default function PortfolioPage() {
                   >
                     {album.cover ? <img src={album.cover.thumbnailSrc || album.cover.src} alt={album.name} className="h-full w-full object-cover" /> : <div className="h-full w-full bg-white/10" />}
                     <div className="pointer-events-none absolute inset-0 bg-black/35 transition group-hover:bg-black/22" />
-                    <div className="pointer-events-none absolute inset-0 grid place-items-center px-2"><p className="text-center text-[11px] uppercase tracking-[0.22em] text-white/92 md:text-xs">{album.name}</p></div>
+                    <div className="pointer-events-none absolute inset-0 grid place-items-center px-2"><p className="text-center text-[11px] uppercase tracking-[0.22em] text-white/92 md:text-xs">{albumCardLabel}</p></div>
                   </button>
-                ))}
+                  )
+                })}
               </div>
             </div>
 

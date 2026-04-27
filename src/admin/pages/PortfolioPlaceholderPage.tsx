@@ -126,6 +126,7 @@ export default function PortfolioPlaceholderPage() {
           <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-6">
             <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-white/40">Detail Content</p>
             <div className="space-y-4">
+              <Field label="Album Display Name" value={current.albumName ?? ''} onChange={(e) => updateField('albumName', e.target.value)} />
               <Field label="Eyebrow" value={current.eyebrow ?? ''} onChange={(e) => updateField('eyebrow', e.target.value)} />
               <Field label="Title" value={current.title ?? ''} onChange={(e) => updateField('title', e.target.value)} />
               <Field as="textarea" rows={3} label="Subtitle" value={current.subtitle ?? ''} onChange={(e) => updateField('subtitle', e.target.value)} />

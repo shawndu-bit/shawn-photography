@@ -124,6 +124,7 @@ export interface SiteSectionVisibility {
 }
 
 export interface PortfolioAlbumDetail {
+  albumName?: string
   eyebrow?: string
   title?: string
   subtitle?: string

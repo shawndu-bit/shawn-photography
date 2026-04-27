@@ -11,8 +11,9 @@ function normalizeCategory(category: string | undefined) {
 }
 
 export function mergeSiteContent(parsed: Partial<SiteContent>): SiteContent {
+  const legacyPortfolio = (parsed.about as (Record<string, unknown> & { portfolio?: SiteContent['portfolio'] }) | undefined)?.portfolio
   const defaultAlbumDetails = defaultSiteContent.portfolio?.albumDetails ?? {}
-  const parsedAlbumDetails = parsed.portfolio?.albumDetails ?? {}
+  const parsedAlbumDetails = parsed.portfolio?.albumDetails ?? legacyPortfolio?.albumDetails ?? {}
   const mergedAlbumDetails = Object.entries(parsedAlbumDetails).reduce<Record<string, NonNullable<SiteContent['portfolio']>['albumDetails'][string]>>(
     (acc, [albumId, detail]) => {
       acc[albumId] = {
@@ -67,6 +68,7 @@ export function mergeSiteContent(parsed: Partial<SiteContent>): SiteContent {
     blog: normalizeBlogSettings(parsed.blog, defaultSiteContent.blog),
     portfolio: {
       ...defaultSiteContent.portfolio,
+      ...legacyPortfolio,
       ...parsed.portfolio,
       albumDetails: mergedAlbumDetails,
     },
