@@ -119,20 +119,20 @@ export default function SiteHeader({ mode }: SiteHeaderProps) {
           </Link>
         )}
 
-        <nav className="hidden md:block">
-          <ul className="flex items-center justify-center gap-4 text-sm font-medium uppercase tracking-[0.18em] text-zinc-100 md:gap-6 md:text-base">
+        <nav className="hidden h-16 md:block">
+          <ul className="flex h-full items-center justify-center gap-4 text-sm font-medium uppercase tracking-[0.18em] text-zinc-100 md:gap-6 md:text-base">
             {mode === 'home' ? (
               <>
                 <li><a href="#home" className={navItemClass}>Home</a></li>
                 <li
-                  className="relative"
+                  className="relative flex h-full items-center"
                   onMouseEnter={openPortfolioDropdown}
                   onMouseLeave={scheduleClosePortfolioDropdown}
                   onFocusCapture={openPortfolioDropdown}
                   onBlurCapture={scheduleClosePortfolioDropdown}
                 >
                   <Link to="/portfolio" className={navItemClass}>Portfolio</Link>
-                  <div className={`${portfolioDropdownOpen ? 'visible opacity-100' : 'invisible opacity-0'} absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 border border-white/10 bg-black/70 backdrop-blur-xl transition duration-150`}>
+                  <div className={`${portfolioDropdownOpen ? 'visible opacity-100' : 'invisible opacity-0'} absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 border border-white/10 bg-black/70 backdrop-blur-xl shadow-lg shadow-black/30 transition duration-150`}>
                     <ul className="divide-y divide-white/10 text-[11px] uppercase tracking-[0.2em] text-white/85">
                       {PORTFOLIO_ALBUM_IDS.map((albumId) => (
                         <li key={albumId}>
@@ -156,14 +156,14 @@ export default function SiteHeader({ mode }: SiteHeaderProps) {
               <>
                 <li><Link to="/" className={navItemClass}>Home</Link></li>
                 <li
-                  className="relative"
+                  className="relative flex h-full items-center"
                   onMouseEnter={openPortfolioDropdown}
                   onMouseLeave={scheduleClosePortfolioDropdown}
                   onFocusCapture={openPortfolioDropdown}
                   onBlurCapture={scheduleClosePortfolioDropdown}
                 >
                   <Link to="/portfolio" className={navItemClass}>Portfolio</Link>
-                  <div className={`${portfolioDropdownOpen ? 'visible opacity-100' : 'invisible opacity-0'} absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 border border-white/10 bg-black/70 backdrop-blur-xl transition duration-150`}>
+                  <div className={`${portfolioDropdownOpen ? 'visible opacity-100' : 'invisible opacity-0'} absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 border border-white/10 bg-black/70 backdrop-blur-xl shadow-lg shadow-black/30 transition duration-150`}>
                     <ul className="divide-y divide-white/10 text-[11px] uppercase tracking-[0.2em] text-white/85">
                       {PORTFOLIO_ALBUM_IDS.map((albumId) => (
                         <li key={albumId}>

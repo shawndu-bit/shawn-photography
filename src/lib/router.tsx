@@ -14,6 +14,7 @@ import {
 interface RouterContextValue {
   pathname: string
   search: string
+  hash: string
   navigate: (to: string, opts?: { replace?: boolean }) => void
 }
 
@@ -38,11 +39,16 @@ function parseLocation(to: string) {
   try {
     const parsed = new URL(to, window.location.origin)
     const pathname = normalizePath(parsed.pathname)
-    return { pathname, search: parsed.search || '' }
+    return { pathname, search: parsed.search || '', hash: parsed.hash || '' }
   } catch {
-    const [rawPathname, rawSearch = ''] = to.split('?')
+    const [pathWithSearch, rawHash = ''] = to.split('#')
+    const [rawPathname, rawSearch = ''] = pathWithSearch.split('?')
     const pathname = normalizePath(rawPathname || '/')
-    return { pathname, search: rawSearch ? `?${rawSearch}` : '' }
+    return {
+      pathname,
+      search: rawSearch ? `?${rawSearch}` : '',
+      hash: rawHash ? `#${rawHash}` : '',
+    }
   }
 }
 
@@ -84,10 +90,11 @@ export function BrowserRouter({ children }: { children: ReactNode }) {
     () => ({
       pathname: locationState.pathname,
       search: locationState.search,
+      hash: locationState.hash,
       navigate(to, opts) {
         const target = parseLocation(to)
-        if (target.pathname === locationState.pathname && target.search === locationState.search) return
-        const href = `${target.pathname}${target.search}`
+        if (target.pathname === locationState.pathname && target.search === locationState.search && target.hash === locationState.hash) return
+        const href = `${target.pathname}${target.search}${target.hash}`
         if (opts?.replace) {
           window.history.replaceState({}, '', href)
         } else {
@@ -96,8 +103,20 @@ export function BrowserRouter({ children }: { children: ReactNode }) {
         setLocationState(target)
       },
     }),
-    [locationState.pathname, locationState.search],
+    [locationState.pathname, locationState.search, locationState.hash],
   )
+
+  useEffect(() => {
+    if (locationState.hash) {
+      const targetId = decodeURIComponent(locationState.hash.slice(1))
+      if (!targetId) return
+      const element = document.getElementById(targetId)
+      if (element) element.scrollIntoView()
+      return
+    }
+
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [locationState.pathname, locationState.hash])
 
   return (
     <RouterContext.Provider value={value}>
@@ -109,7 +128,7 @@ export function BrowserRouter({ children }: { children: ReactNode }) {
 export function useLocation() {
   const ctx = useContext(RouterContext)
   if (!ctx) throw new Error('useLocation must be used within BrowserRouter')
-  return { pathname: ctx.pathname, search: ctx.search }
+  return { pathname: ctx.pathname, search: ctx.search, hash: ctx.hash }
 }
 
 export function useNavigate() {
