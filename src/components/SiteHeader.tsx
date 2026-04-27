@@ -1,5 +1,5 @@
 import { Menu, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSiteContentContext } from '@/hooks/useSiteContentContext'
 
@@ -36,6 +36,8 @@ export default function SiteHeader({ mode }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mobilePortfolioOpen, setMobilePortfolioOpen] = useState(false)
+  const [portfolioDropdownOpen, setPortfolioDropdownOpen] = useState(false)
+  const closePortfolioTimeoutRef = useRef<number | null>(null)
   const portfolioDetails = siteContent.portfolio?.albumDetails ?? {}
 
   useEffect(() => {
@@ -59,6 +61,34 @@ export default function SiteHeader({ mode }: SiteHeaderProps) {
   useEffect(() => {
     if (!mobileOpen) setMobilePortfolioOpen(false)
   }, [mobileOpen])
+
+  useEffect(() => {
+    return () => {
+      if (closePortfolioTimeoutRef.current !== null) {
+        window.clearTimeout(closePortfolioTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  function cancelClosePortfolioDropdown() {
+    if (closePortfolioTimeoutRef.current !== null) {
+      window.clearTimeout(closePortfolioTimeoutRef.current)
+      closePortfolioTimeoutRef.current = null
+    }
+  }
+
+  function openPortfolioDropdown() {
+    cancelClosePortfolioDropdown()
+    setPortfolioDropdownOpen(true)
+  }
+
+  function scheduleClosePortfolioDropdown() {
+    cancelClosePortfolioDropdown()
+    closePortfolioTimeoutRef.current = window.setTimeout(() => {
+      setPortfolioDropdownOpen(false)
+      closePortfolioTimeoutRef.current = null
+    }, 300)
+  }
 
   const navItemClass = 'transition hover:text-white'
 
@@ -94,15 +124,22 @@ export default function SiteHeader({ mode }: SiteHeaderProps) {
             {mode === 'home' ? (
               <>
                 <li><a href="#home" className={navItemClass}>Home</a></li>
-                <li className="group relative">
+                <li
+                  className="relative"
+                  onMouseEnter={openPortfolioDropdown}
+                  onMouseLeave={scheduleClosePortfolioDropdown}
+                  onFocusCapture={openPortfolioDropdown}
+                  onBlurCapture={scheduleClosePortfolioDropdown}
+                >
                   <Link to="/portfolio" className={navItemClass}>Portfolio</Link>
-                  <div className="invisible absolute left-1/2 top-full mt-3 w-56 -translate-x-1/2 rounded-xl border border-white/15 bg-[#131313]/95 p-2 opacity-0 shadow-xl shadow-black/35 transition duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                    <ul className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-white/85">
+                  <div className={`${portfolioDropdownOpen ? 'visible opacity-100' : 'invisible opacity-0'} absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 border border-white/10 bg-black/70 backdrop-blur-xl transition duration-150`}>
+                    <ul className="divide-y divide-white/10 text-[11px] uppercase tracking-[0.2em] text-white/85">
                       {PORTFOLIO_ALBUM_IDS.map((albumId) => (
                         <li key={albumId}>
                           <Link
                             to={`/portfolio?album=${albumId}`}
-                            className="block rounded-md px-3 py-2 transition hover:bg-white/10 hover:text-white"
+                            className="block px-3 py-2 transition hover:bg-white/8 hover:text-white"
+                            onClick={() => setPortfolioDropdownOpen(false)}
                           >
                             {getPortfolioAlbumLabel(albumId, portfolioDetails)}
                           </Link>
@@ -118,15 +155,22 @@ export default function SiteHeader({ mode }: SiteHeaderProps) {
             ) : (
               <>
                 <li><Link to="/" className={navItemClass}>Home</Link></li>
-                <li className="group relative">
+                <li
+                  className="relative"
+                  onMouseEnter={openPortfolioDropdown}
+                  onMouseLeave={scheduleClosePortfolioDropdown}
+                  onFocusCapture={openPortfolioDropdown}
+                  onBlurCapture={scheduleClosePortfolioDropdown}
+                >
                   <Link to="/portfolio" className={navItemClass}>Portfolio</Link>
-                  <div className="invisible absolute left-1/2 top-full mt-3 w-56 -translate-x-1/2 rounded-xl border border-white/15 bg-[#131313]/95 p-2 opacity-0 shadow-xl shadow-black/35 transition duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                    <ul className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-white/85">
+                  <div className={`${portfolioDropdownOpen ? 'visible opacity-100' : 'invisible opacity-0'} absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 border border-white/10 bg-black/70 backdrop-blur-xl transition duration-150`}>
+                    <ul className="divide-y divide-white/10 text-[11px] uppercase tracking-[0.2em] text-white/85">
                       {PORTFOLIO_ALBUM_IDS.map((albumId) => (
                         <li key={albumId}>
                           <Link
                             to={`/portfolio?album=${albumId}`}
-                            className="block rounded-md px-3 py-2 transition hover:bg-white/10 hover:text-white"
+                            className="block px-3 py-2 transition hover:bg-white/8 hover:text-white"
+                            onClick={() => setPortfolioDropdownOpen(false)}
                           >
                             {getPortfolioAlbumLabel(albumId, portfolioDetails)}
                           </Link>
