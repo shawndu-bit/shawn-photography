@@ -235,7 +235,7 @@ export default function PortfolioPage() {
   const [managedAssets, setManagedAssets] = useState<MediaAsset[]>([])
   const [assetsLoaded, setAssetsLoaded] = useState(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
-  const [stageIntroKey, setStageIntroKey] = useState(0)
+  const [stageIntroActive, setStageIntroActive] = useState(false)
   const [stripIntroActive, setStripIntroActive] = useState(true)
   const managedAssetIds = useMemo(() => {
     const ids = Object.values(siteContent.portfolio?.albumPhotoIds ?? {}).flat()
@@ -337,9 +337,16 @@ export default function PortfolioPage() {
     setCarouselOrder(activeAlbum.photos)
     setDisplayPhoto(activeAlbum.photos[0] ?? null)
     setIsAnimating(false)
-    if (!prefersReducedMotion) {
-      setStageIntroKey((prev) => prev + 1)
+    if (prefersReducedMotion) {
+      setStageIntroActive(false)
+      return
     }
+
+    setStageIntroActive(true)
+    const timeout = window.setTimeout(() => {
+      setStageIntroActive(false)
+    }, 1120)
+    return () => window.clearTimeout(timeout)
   }, [activeAlbum, prefersReducedMotion])
 
   const currentPhoto = carouselOrder[0] ?? null
@@ -449,11 +456,11 @@ export default function PortfolioPage() {
                         <div
                           className="relative h-full w-full overflow-hidden"
                           style={{
-                            animation: prefersReducedMotion
+                            animation: !stageIntroActive || prefersReducedMotion
                               ? undefined
                               : slot === 'center'
-                                ? 'portfolioCenterIntro 760ms cubic-bezier(0.22, 1, 0.36, 1) both'
-                                : 'portfolioSideIntro 620ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both',
+                                ? 'portfolioCenterIntro 1100ms cubic-bezier(0.22, 1, 0.36, 1) both'
+                                : 'portfolioSideIntro 900ms cubic-bezier(0.22, 1, 0.36, 1) 220ms both',
                           }}
                         >
                           <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
@@ -504,7 +511,7 @@ export default function PortfolioPage() {
                 className="flex min-w-max items-stretch gap-3 pr-3"
                 style={{
                   animation: !prefersReducedMotion && stripIntroActive
-                    ? 'portfolioStripIntro 580ms cubic-bezier(0.22, 1, 0.36, 1) 240ms both'
+                    ? 'portfolioStripIntro 900ms cubic-bezier(0.22, 1, 0.36, 1) 320ms both'
                     : undefined,
                 }}
               >
