@@ -231,12 +231,8 @@ export default function PortfolioPage() {
   const { siteContent } = useSiteContentContext()
   const { search } = useLocation()
   const navigate = useNavigate()
-  const initialAlbumFromUrl = useMemo(() => new URLSearchParams(search).get('album')?.trim() ?? '', [search])
   const [managedAssets, setManagedAssets] = useState<MediaAsset[]>([])
   const [assetsLoaded, setAssetsLoaded] = useState(false)
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
-  const [stageIntroActive, setStageIntroActive] = useState(false)
-  const [stripIntroActive, setStripIntroActive] = useState(true)
   const managedAssetIds = useMemo(() => {
     const ids = Object.values(siteContent.portfolio?.albumPhotoIds ?? {}).flat()
     return ids.filter((id, index, list) => !!id && list.indexOf(id) === index)
@@ -274,6 +270,11 @@ export default function PortfolioPage() {
     void load()
     return () => { active = false }
   }, [managedAssetIds])
+
+  const albums = useMemo(
+    () => createAlbums(siteContent.photos, siteContent.portfolio, managedAssetMap),
+    [managedAssetMap, siteContent.photos, siteContent.portfolio],
+  )
 
   const albums = useMemo(
     () => createAlbums(siteContent.photos, siteContent.portfolio, managedAssetMap),
