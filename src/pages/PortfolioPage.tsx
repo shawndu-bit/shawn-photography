@@ -14,6 +14,17 @@ interface Album {
   photos: Photo[]
   cover: Photo | null
 }
+interface MediaAsset {
+  id: string
+  originalUrl: string
+  thumbnailUrl: string | null
+  title: string
+  alt: string
+  description: string
+  category: string
+  width: number | null
+  height: number | null
+}
 
 type Slot = 'farLeft' | 'left' | 'center' | 'right' | 'farRight'
 
@@ -31,7 +42,34 @@ function getAlbumName(category: string) {
   return CATEGORY_LABELS[category] ?? category.replace(/_/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase())
 }
 
-function createAlbums(photos: Photo[]) {
+function normalizePhotoCategory(category: string | undefined, fallback: Photo['category'] = 'mountains'): Photo['category'] {
+  if (category === 'mountains' || category === 'sea_lakes' || category === 'nightscape' || category === 'forest' || category === 'city') {
+    return category
+  }
+  return fallback
+}
+
+function fallbackAlbumIds(photos: Photo[]) {
+  const categories = [...new Set(photos.map((photo) => photo.category))]
+  return ['featured', ...categories.filter((category) => category !== 'featured')]
+}
+
+function assetToPhoto(asset: MediaAsset, albumId: string): Photo {
+  return {
+    id: `asset-${asset.id}`,
+    title: asset.title || 'Untitled',
+    description: asset.description || '',
+    specifications: '',
+    src: asset.originalUrl,
+    thumbnailSrc: asset.thumbnailUrl || asset.originalUrl,
+    width: asset.width ?? 0,
+    height: asset.height ?? 0,
+    category: normalizePhotoCategory(asset.category, normalizePhotoCategory(albumId)),
+    alt: asset.alt || asset.title || 'portfolio photo',
+  }
+}
+
+function createAlbums(photos: Photo[], portfolio: ReturnType<typeof useSiteContentContext>['siteContent']['portfolio'], mediaById: Map<string, MediaAsset>) {
   const featured = photos.slice(0, 10)
   const categoryMap = new Map<string, Photo[]>()
 
@@ -49,7 +87,36 @@ function createAlbums(photos: Photo[]) {
     cover: categoryPhotos[0] ?? null,
   }))
 
-  return [{ id: 'featured', name: 'Featured Works', photos: featured, cover: featured[0] ?? null }, ...categoryAlbums].filter((album) => album.photos.length > 0)
+  const fallbackAlbums = [{ id: 'featured', name: 'Featured Works', photos: featured, cover: featured[0] ?? null }, ...categoryAlbums]
+  const fallbackMap = new Map<string, Album>(fallbackAlbums.map((album) => [album.id, album]))
+  const details = portfolio?.albumDetails ?? {}
+  const albumPhotoIds = portfolio?.albumPhotoIds ?? {}
+  const albumOrder = portfolio?.albumOrder?.length
+    ? portfolio.albumOrder
+    : fallbackAlbumIds(photos)
+  const extraIds = [...Object.keys(details), ...Object.keys(albumPhotoIds), ...fallbackMap.keys()]
+  const allIds = [...albumOrder, ...extraIds].filter((id, index, arr) => !!id && arr.indexOf(id) === index)
+
+  return allIds.map((albumId) => {
+    const fallbackAlbum = fallbackMap.get(albumId)
+    const managedIds = albumPhotoIds[albumId] ?? []
+    const managedPhotos = managedIds
+      .map((assetId) => mediaById.get(assetId))
+      .filter((asset): asset is MediaAsset => Boolean(asset))
+      .map((asset) => assetToPhoto(asset, albumId))
+
+    const photosForAlbum = managedPhotos.length > 0
+      ? managedPhotos
+      : fallbackAlbum?.photos ?? []
+    const name = details[albumId]?.albumName?.trim() || details[albumId]?.title?.trim() || fallbackAlbum?.name || getAlbumName(albumId)
+
+    return {
+      id: albumId,
+      name,
+      photos: photosForAlbum,
+      cover: photosForAlbum[0] ?? fallbackAlbum?.cover ?? null,
+    }
+  })
 }
 
 function rotateNext(list: Photo[]) {
@@ -164,7 +231,50 @@ export default function PortfolioPage() {
   const { siteContent } = useSiteContentContext()
   const { search } = useLocation()
   const navigate = useNavigate()
-  const albums = useMemo(() => createAlbums(siteContent.photos), [siteContent.photos])
+  const [managedAssets, setManagedAssets] = useState<MediaAsset[]>([])
+  const [assetsLoaded, setAssetsLoaded] = useState(false)
+  const managedAssetIds = useMemo(() => {
+    const ids = Object.values(siteContent.portfolio?.albumPhotoIds ?? {}).flat()
+    return ids.filter((id, index, list) => !!id && list.indexOf(id) === index)
+  }, [siteContent.portfolio?.albumPhotoIds])
+  const managedAssetMap = useMemo(() => {
+    const map = new Map<string, MediaAsset>()
+    managedAssets.forEach((asset) => map.set(asset.id, asset))
+    return map
+  }, [managedAssets])
+
+  useEffect(() => {
+    if (managedAssetIds.length === 0) {
+      setManagedAssets([])
+      setAssetsLoaded(true)
+      return
+    }
+    let active = true
+    const load = async () => {
+      try {
+        setAssetsLoaded(false)
+        const res = await fetch('/api/admin/media-assets?status=active')
+        const data = await res.json() as { ok?: boolean; assets?: MediaAsset[] }
+        if (!res.ok || !data.ok || !Array.isArray(data.assets)) {
+          throw new Error('Failed to load managed album assets')
+        }
+        if (!active) return
+        setManagedAssets(data.assets.filter((asset) => managedAssetIds.includes(asset.id)))
+      } catch {
+        if (!active) return
+        setManagedAssets([])
+      } finally {
+        if (active) setAssetsLoaded(true)
+      }
+    }
+    void load()
+    return () => { active = false }
+  }, [managedAssetIds])
+
+  const albums = useMemo(
+    () => createAlbums(siteContent.photos, siteContent.portfolio, managedAssetMap),
+    [managedAssetMap, siteContent.photos, siteContent.portfolio],
+  )
 
   const [activeAlbumId, setActiveAlbumId] = useState('featured')
   const [carouselOrder, setCarouselOrder] = useState<Photo[]>([])
@@ -287,6 +397,9 @@ export default function PortfolioPage() {
 
           <div className="flex flex-col">
             <div className="relative">
+              {!assetsLoaded && managedAssetIds.length > 0 && (
+                <p className="mb-4 text-xs uppercase tracking-[0.2em] text-white/45">Loading album photos…</p>
+              )}
               {currentPhoto ? (
                 <>
                   <div className="relative hidden h-[clamp(340px,48vh,600px)] w-full overflow-visible lg:block" style={{ perspective: '1400px', perspectiveOrigin: '50% 50%' }}>
