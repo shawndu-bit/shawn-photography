@@ -164,16 +164,17 @@ export default function PortfolioPage() {
   const { siteContent } = useSiteContentContext()
   const { search } = useLocation()
   const navigate = useNavigate()
+  const initialAlbumFromUrl = useMemo(() => new URLSearchParams(search).get('album')?.trim() ?? '', [search])
   const albums = useMemo(() => createAlbums(siteContent.photos), [siteContent.photos])
 
-  const [activeAlbumId, setActiveAlbumId] = useState('featured')
+  const [activeAlbumId, setActiveAlbumId] = useState(initialAlbumFromUrl || 'featured')
   const [carouselOrder, setCarouselOrder] = useState<Photo[]>([])
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [displayPhoto, setDisplayPhoto] = useState<Photo | null>(null)
 
   const activeAlbum = albums.find((album) => album.id === activeAlbumId) ?? albums[0] ?? null
-  const queryAlbumId = useMemo(() => new URLSearchParams(search).get('album')?.trim() ?? '', [search])
+  const queryAlbumId = initialAlbumFromUrl
 
   useEffect(() => {
     if (albums.length === 0) return

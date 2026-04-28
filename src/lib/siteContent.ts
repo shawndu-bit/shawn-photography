@@ -14,6 +14,19 @@ export function mergeSiteContent(parsed: Partial<SiteContent>): SiteContent {
   const legacyPortfolio = (parsed.about as (Record<string, unknown> & { portfolio?: SiteContent['portfolio'] }) | undefined)?.portfolio
   const defaultAlbumDetails = defaultSiteContent.portfolio?.albumDetails ?? {}
   const parsedAlbumDetails = parsed.portfolio?.albumDetails ?? legacyPortfolio?.albumDetails ?? {}
+  const defaultAlbumOrder = defaultSiteContent.portfolio?.albumOrder ?? []
+  const parsedAlbumOrder = parsed.portfolio?.albumOrder ?? legacyPortfolio?.albumOrder ?? []
+  const mergedAlbumOrder = Array.isArray(parsedAlbumOrder)
+    ? parsedAlbumOrder.filter((albumId): albumId is string => typeof albumId === 'string' && albumId.trim().length > 0)
+    : defaultAlbumOrder
+  const parsedAlbumPhotoIds = parsed.portfolio?.albumPhotoIds ?? legacyPortfolio?.albumPhotoIds ?? {}
+  const mergedAlbumPhotoIds = Object.entries(parsedAlbumPhotoIds ?? {}).reduce<Record<string, string[]>>((acc, [albumId, rawIds]) => {
+    const ids = Array.isArray(rawIds)
+      ? rawIds.filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+      : []
+    acc[albumId] = ids
+    return acc
+  }, {})
   const mergedAlbumDetails = Object.entries(parsedAlbumDetails).reduce<Record<string, NonNullable<SiteContent['portfolio']>['albumDetails'][string]>>(
     (acc, [albumId, detail]) => {
       acc[albumId] = {
@@ -70,6 +83,8 @@ export function mergeSiteContent(parsed: Partial<SiteContent>): SiteContent {
       ...defaultSiteContent.portfolio,
       ...legacyPortfolio,
       ...parsed.portfolio,
+      albumOrder: mergedAlbumOrder,
+      albumPhotoIds: mergedAlbumPhotoIds,
       albumDetails: mergedAlbumDetails,
     },
     socialLinks: parsed.socialLinks ?? defaultSiteContent.socialLinks,
