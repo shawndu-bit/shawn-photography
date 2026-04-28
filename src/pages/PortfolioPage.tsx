@@ -332,8 +332,11 @@ export default function PortfolioPage() {
   useEffect(() => {
     if (!activeAlbum) {
       setCarouselOrder([])
+      setDisplayPhoto(null)
+      setIsAnimating(false)
       return
     }
+
     setCarouselOrder(activeAlbum.photos)
     setDisplayPhoto(activeAlbum.photos[0] ?? null)
     setIsAnimating(false)
@@ -348,6 +351,19 @@ export default function PortfolioPage() {
     }, 1120)
     return () => window.clearTimeout(timeout)
   }, [activeAlbum, prefersReducedMotion])
+
+  useEffect(() => {
+    if (!activeAlbumId || prefersReducedMotion) {
+      setStageIntroActive(false)
+      return
+    }
+
+    setStageIntroActive(true)
+    const timeout = window.setTimeout(() => {
+      setStageIntroActive(false)
+    }, 1120)
+    return () => window.clearTimeout(timeout)
+  }, [activeAlbumId, prefersReducedMotion])
 
   const currentPhoto = carouselOrder[0] ?? null
   const canNavigate = carouselOrder.length > 1
