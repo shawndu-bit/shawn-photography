@@ -14,6 +14,17 @@ interface Album {
   photos: Photo[]
   cover: Photo | null
 }
+interface MediaAsset {
+  id: string
+  originalUrl: string
+  thumbnailUrl: string | null
+  title: string
+  alt: string
+  description: string
+  category: string
+  width: number | null
+  height: number | null
+}
 
 type Slot = 'farLeft' | 'left' | 'center' | 'right' | 'farRight'
 
@@ -31,7 +42,34 @@ function getAlbumName(category: string) {
   return CATEGORY_LABELS[category] ?? category.replace(/_/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase())
 }
 
-function createAlbums(photos: Photo[]) {
+function normalizePhotoCategory(category: string | undefined, fallback: Photo['category'] = 'mountains'): Photo['category'] {
+  if (category === 'mountains' || category === 'sea_lakes' || category === 'nightscape' || category === 'forest' || category === 'city') {
+    return category
+  }
+  return fallback
+}
+
+function fallbackAlbumIds(photos: Photo[]) {
+  const categories = [...new Set(photos.map((photo) => photo.category))]
+  return ['featured', ...categories.filter((category) => category !== 'featured')]
+}
+
+function assetToPhoto(asset: MediaAsset, albumId: string): Photo {
+  return {
+    id: `asset-${asset.id}`,
+    title: asset.title || 'Untitled',
+    description: asset.description || '',
+    specifications: '',
+    src: asset.originalUrl,
+    thumbnailSrc: asset.thumbnailUrl || asset.originalUrl,
+    width: asset.width ?? 0,
+    height: asset.height ?? 0,
+    category: normalizePhotoCategory(asset.category, normalizePhotoCategory(albumId)),
+    alt: asset.alt || asset.title || 'portfolio photo',
+  }
+}
+
+function createAlbums(photos: Photo[], portfolio: ReturnType<typeof useSiteContentContext>['siteContent']['portfolio'], mediaById: Map<string, MediaAsset>) {
   const featured = photos.slice(0, 10)
   const categoryMap = new Map<string, Photo[]>()
 
@@ -49,7 +87,36 @@ function createAlbums(photos: Photo[]) {
     cover: categoryPhotos[0] ?? null,
   }))
 
-  return [{ id: 'featured', name: 'Featured Works', photos: featured, cover: featured[0] ?? null }, ...categoryAlbums].filter((album) => album.photos.length > 0)
+  const fallbackAlbums = [{ id: 'featured', name: 'Featured Works', photos: featured, cover: featured[0] ?? null }, ...categoryAlbums]
+  const fallbackMap = new Map<string, Album>(fallbackAlbums.map((album) => [album.id, album]))
+  const details = portfolio?.albumDetails ?? {}
+  const albumPhotoIds = portfolio?.albumPhotoIds ?? {}
+  const albumOrder = portfolio?.albumOrder?.length
+    ? portfolio.albumOrder
+    : fallbackAlbumIds(photos)
+  const extraIds = [...Object.keys(details), ...Object.keys(albumPhotoIds), ...fallbackMap.keys()]
+  const allIds = [...albumOrder, ...extraIds].filter((id, index, arr) => !!id && arr.indexOf(id) === index)
+
+  return allIds.map((albumId) => {
+    const fallbackAlbum = fallbackMap.get(albumId)
+    const managedIds = albumPhotoIds[albumId] ?? []
+    const managedPhotos = managedIds
+      .map((assetId) => mediaById.get(assetId))
+      .filter((asset): asset is MediaAsset => Boolean(asset))
+      .map((asset) => assetToPhoto(asset, albumId))
+
+    const photosForAlbum = managedPhotos.length > 0
+      ? managedPhotos
+      : fallbackAlbum?.photos ?? []
+    const name = details[albumId]?.albumName?.trim() || details[albumId]?.title?.trim() || fallbackAlbum?.name || getAlbumName(albumId)
+
+    return {
+      id: albumId,
+      name,
+      photos: photosForAlbum,
+      cover: photosForAlbum[0] ?? fallbackAlbum?.cover ?? null,
+    }
+  })
 }
 
 function rotateNext(list: Photo[]) {
@@ -197,12 +264,38 @@ export default function PortfolioPage() {
   useEffect(() => {
     if (!activeAlbum) {
       setCarouselOrder([])
+      setDisplayPhoto(null)
+      setIsAnimating(false)
       return
     }
+
     setCarouselOrder(activeAlbum.photos)
     setDisplayPhoto(activeAlbum.photos[0] ?? null)
     setIsAnimating(false)
-  }, [activeAlbum])
+    if (prefersReducedMotion) {
+      setStageIntroActive(false)
+      return
+    }
+
+    setStageIntroActive(true)
+    const timeout = window.setTimeout(() => {
+      setStageIntroActive(false)
+    }, 1120)
+    return () => window.clearTimeout(timeout)
+  }, [activeAlbum, prefersReducedMotion])
+
+  useEffect(() => {
+    if (!activeAlbumId || prefersReducedMotion) {
+      setStageIntroActive(false)
+      return
+    }
+
+    setStageIntroActive(true)
+    const timeout = window.setTimeout(() => {
+      setStageIntroActive(false)
+    }, 1120)
+    return () => window.clearTimeout(timeout)
+  }, [activeAlbumId, prefersReducedMotion])
 
   const currentPhoto = carouselOrder[0] ?? null
   const canNavigate = carouselOrder.length > 1
@@ -288,12 +381,15 @@ export default function PortfolioPage() {
 
           <div className="flex flex-col">
             <div className="relative">
+              {!assetsLoaded && managedAssetIds.length > 0 && (
+                <p className="mb-4 text-xs uppercase tracking-[0.2em] text-white/45">Loading album photos…</p>
+              )}
               {currentPhoto ? (
                 <>
                   <div className="relative hidden h-[clamp(340px,48vh,600px)] w-full overflow-visible lg:block" style={{ perspective: '1400px', perspectiveOrigin: '50% 50%' }}>
                     {panels.map(({ photo, slot }) => (
                       <button
-                        key={photo.id}
+                        key={`${stageIntroKey}-${photo.id}-${slot}`}
                         type="button"
                         onClick={() => {
                           if (slot === 'center' && !isAnimating) setLightboxOpen(true)
@@ -305,7 +401,16 @@ export default function PortfolioPage() {
                         style={getPanelStyle(slot)}
                         aria-label={slot === 'center' ? 'Open image in lightbox' : `View ${displayPhoto?.title || photo.title}`}
                       >
-                        <div className="relative h-full w-full overflow-hidden">
+                        <div
+                          className="relative h-full w-full overflow-hidden"
+                          style={{
+                            animation: !stageIntroActive || prefersReducedMotion
+                              ? undefined
+                              : slot === 'center'
+                                ? 'portfolioCenterIntro 1100ms cubic-bezier(0.22, 1, 0.36, 1) both'
+                                : 'portfolioSideIntro 900ms cubic-bezier(0.22, 1, 0.36, 1) 220ms both',
+                          }}
+                        >
                           <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
                           {slot === 'center' && (
                             <>
@@ -350,7 +455,14 @@ export default function PortfolioPage() {
             </div>
 
             <div className="relative left-1/2 mt-20 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pt-3 pb-4 lg:mt-24">
-              <div className="flex min-w-max items-stretch gap-3 pr-3">
+              <div
+                className="flex min-w-max items-stretch gap-3 pr-3"
+                style={{
+                  animation: !prefersReducedMotion && stripIntroActive
+                    ? 'portfolioStripIntro 900ms cubic-bezier(0.22, 1, 0.36, 1) 320ms both'
+                    : undefined,
+                }}
+              >
                 {albums.map((album) => {
                   const detail = getAlbumDetail(album.id)
                   const albumCardLabel = detail.albumName?.trim() || detail.title?.trim() || album.name
@@ -453,6 +565,40 @@ export default function PortfolioPage() {
           </div>
         </div>
       )}
+      <style>{`
+        @keyframes portfolioCenterIntro {
+          from {
+            opacity: 0;
+            transform: translateX(40px) rotateY(-8deg) scale(0.985);
+            filter: brightness(0.82);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0) rotateY(0deg) scale(1);
+            filter: brightness(1);
+          }
+        }
+        @keyframes portfolioSideIntro {
+          from {
+            opacity: 0;
+            filter: brightness(0.78);
+          }
+          to {
+            opacity: 1;
+            filter: brightness(1);
+          }
+        }
+        @keyframes portfolioStripIntro {
+          from {
+            opacity: 0;
+            transform: translateY(18px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   )
 }
