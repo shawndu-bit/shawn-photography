@@ -276,14 +276,14 @@ export default function PortfolioPage() {
     [managedAssetMap, siteContent.photos, siteContent.portfolio],
   )
 
-  const [activeAlbumId, setActiveAlbumId] = useState('featured')
+  const [activeAlbumId, setActiveAlbumId] = useState(initialAlbumFromUrl || 'featured')
   const [carouselOrder, setCarouselOrder] = useState<Photo[]>([])
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [displayPhoto, setDisplayPhoto] = useState<Photo | null>(null)
 
   const activeAlbum = albums.find((album) => album.id === activeAlbumId) ?? albums[0] ?? null
-  const queryAlbumId = useMemo(() => new URLSearchParams(search).get('album')?.trim() ?? '', [search])
+  const queryAlbumId = initialAlbumFromUrl
 
   useEffect(() => {
     if (albums.length === 0) return
@@ -306,12 +306,38 @@ export default function PortfolioPage() {
   useEffect(() => {
     if (!activeAlbum) {
       setCarouselOrder([])
+      setDisplayPhoto(null)
+      setIsAnimating(false)
       return
     }
+
     setCarouselOrder(activeAlbum.photos)
     setDisplayPhoto(activeAlbum.photos[0] ?? null)
     setIsAnimating(false)
-  }, [activeAlbum])
+    if (prefersReducedMotion) {
+      setStageIntroActive(false)
+      return
+    }
+
+    setStageIntroActive(true)
+    const timeout = window.setTimeout(() => {
+      setStageIntroActive(false)
+    }, 1120)
+    return () => window.clearTimeout(timeout)
+  }, [activeAlbum, prefersReducedMotion])
+
+  useEffect(() => {
+    if (!activeAlbumId || prefersReducedMotion) {
+      setStageIntroActive(false)
+      return
+    }
+
+    setStageIntroActive(true)
+    const timeout = window.setTimeout(() => {
+      setStageIntroActive(false)
+    }, 1120)
+    return () => window.clearTimeout(timeout)
+  }, [activeAlbumId, prefersReducedMotion])
 
   const currentPhoto = carouselOrder[0] ?? null
   const canNavigate = carouselOrder.length > 1
@@ -405,7 +431,7 @@ export default function PortfolioPage() {
                   <div className="relative hidden h-[clamp(340px,48vh,600px)] w-full overflow-visible lg:block" style={{ perspective: '1400px', perspectiveOrigin: '50% 50%' }}>
                     {panels.map(({ photo, slot }) => (
                       <button
-                        key={photo.id}
+                        key={`${stageIntroKey}-${photo.id}-${slot}`}
                         type="button"
                         onClick={() => {
                           if (slot === 'center' && !isAnimating) setLightboxOpen(true)
@@ -417,7 +443,16 @@ export default function PortfolioPage() {
                         style={getPanelStyle(slot)}
                         aria-label={slot === 'center' ? 'Open image in lightbox' : `View ${displayPhoto?.title || photo.title}`}
                       >
-                        <div className="relative h-full w-full overflow-hidden">
+                        <div
+                          className="relative h-full w-full overflow-hidden"
+                          style={{
+                            animation: !stageIntroActive || prefersReducedMotion
+                              ? undefined
+                              : slot === 'center'
+                                ? 'portfolioCenterIntro 1100ms cubic-bezier(0.22, 1, 0.36, 1) both'
+                                : 'portfolioSideIntro 900ms cubic-bezier(0.22, 1, 0.36, 1) 220ms both',
+                          }}
+                        >
                           <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
                           {slot === 'center' && (
                             <>
@@ -462,7 +497,14 @@ export default function PortfolioPage() {
             </div>
 
             <div className="relative left-1/2 mt-20 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pt-3 pb-4 lg:mt-24">
-              <div className="flex min-w-max items-stretch gap-3 pr-3">
+              <div
+                className="flex min-w-max items-stretch gap-3 pr-3"
+                style={{
+                  animation: !prefersReducedMotion && stripIntroActive
+                    ? 'portfolioStripIntro 900ms cubic-bezier(0.22, 1, 0.36, 1) 320ms both'
+                    : undefined,
+                }}
+              >
                 {albums.map((album) => {
                   const detail = getAlbumDetail(album.id)
                   const albumCardLabel = detail.albumName?.trim() || detail.title?.trim() || album.name
@@ -565,6 +607,40 @@ export default function PortfolioPage() {
           </div>
         </div>
       )}
+      <style>{`
+        @keyframes portfolioCenterIntro {
+          from {
+            opacity: 0;
+            transform: translateX(40px) rotateY(-8deg) scale(0.985);
+            filter: brightness(0.82);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0) rotateY(0deg) scale(1);
+            filter: brightness(1);
+          }
+        }
+        @keyframes portfolioSideIntro {
+          from {
+            opacity: 0;
+            filter: brightness(0.78);
+          }
+          to {
+            opacity: 1;
+            filter: brightness(1);
+          }
+        }
+        @keyframes portfolioStripIntro {
+          from {
+            opacity: 0;
+            transform: translateY(18px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   )
 }
