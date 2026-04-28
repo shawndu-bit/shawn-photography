@@ -271,10 +271,7 @@ export default function PortfolioPage() {
     return () => { active = false }
   }, [managedAssetIds])
 
-  const albums = useMemo(
-    () => createAlbums(siteContent.photos, siteContent.portfolio, managedAssetMap),
-    [managedAssetMap, siteContent.photos, siteContent.portfolio],
-  )
+
 
   const albums = useMemo(
     () => createAlbums(siteContent.photos, siteContent.portfolio, managedAssetMap),
