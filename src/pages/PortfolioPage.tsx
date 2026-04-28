@@ -281,6 +281,8 @@ export default function PortfolioPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [displayPhoto, setDisplayPhoto] = useState<Photo | null>(null)
+  const [stripIntroActive, setStripIntroActive] = useState(true)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
 
   const activeAlbum = albums.find((album) => album.id === activeAlbumId) ?? albums[0] ?? null
   const queryAlbumId = useMemo(() => new URLSearchParams(search).get('album')?.trim() ?? '', [search])
@@ -312,6 +314,31 @@ export default function PortfolioPage() {
     setDisplayPhoto(activeAlbum.photos[0] ?? null)
     setIsAnimating(false)
   }, [activeAlbum])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const syncPreference = () => setPrefersReducedMotion(mediaQuery.matches)
+
+    syncPreference()
+    mediaQuery.addEventListener('change', syncPreference)
+
+    return () => mediaQuery.removeEventListener('change', syncPreference)
+  }, [])
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setStripIntroActive(false)
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      setStripIntroActive(false)
+    }, 1300)
+
+    return () => window.clearTimeout(timeout)
+  }, [prefersReducedMotion])
 
   const currentPhoto = carouselOrder[0] ?? null
   const canNavigate = carouselOrder.length > 1
@@ -462,7 +489,14 @@ export default function PortfolioPage() {
             </div>
 
             <div className="relative left-1/2 mt-20 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pt-3 pb-4 lg:mt-24">
-              <div className="flex min-w-max items-stretch gap-3 pr-3">
+              <div
+                className="flex min-w-max items-stretch gap-3 pr-3"
+                style={{
+                  animation: !prefersReducedMotion && stripIntroActive
+                    ? 'portfolioStripIntro 1100ms cubic-bezier(0.22, 1, 0.36, 1) 220ms both'
+                    : undefined,
+                }}
+              >
                 {albums.map((album) => {
                   const detail = getAlbumDetail(album.id)
                   const albumCardLabel = detail.albumName?.trim() || detail.title?.trim() || album.name
@@ -543,6 +577,19 @@ export default function PortfolioPage() {
       </main>
 
       <Footer />
+
+      <style>{`
+        @keyframes portfolioStripIntro {
+          from {
+            opacity: 0;
+            transform: translateY(22px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
 
       {lightboxOpen && currentPhoto && (
         <div className="fixed inset-0 z-[120] bg-black/95 p-4 md:p-8" role="dialog" aria-modal="true" onClick={() => setLightboxOpen(false)}>
