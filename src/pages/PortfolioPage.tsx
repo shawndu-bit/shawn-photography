@@ -441,7 +441,7 @@ export default function PortfolioPage() {
                   <div className="relative hidden h-[clamp(340px,48vh,600px)] w-full overflow-visible lg:block" style={{ perspective: '1400px', perspectiveOrigin: '50% 50%' }}>
                     {panels.map(({ photo, slot }) => (
                       <button
-                        key={photo.id}
+                        key={`${stageIntroKey}-${photo.id}-${slot}`}
                         type="button"
                         onClick={() => {
                           if (slot === 'center' && !isAnimating) setLightboxOpen(true)
