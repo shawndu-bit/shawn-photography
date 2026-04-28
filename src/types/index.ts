@@ -137,6 +137,8 @@ export interface PortfolioAlbumDetail {
 
 export interface PortfolioContent {
   albumDetails?: Record<string, PortfolioAlbumDetail>
+  albumOrder?: string[]
+  albumPhotoIds?: Record<string, string[]>
 }
 
 export interface SiteContent {
