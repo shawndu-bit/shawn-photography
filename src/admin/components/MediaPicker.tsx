@@ -6,9 +6,12 @@ export interface MediaPickerAsset {
   thumbnailUrl: string | null
   title: string
   alt: string
+  description?: string
   filename: string | null
   usageType: string
   category: string
+  width?: number | null
+  height?: number | null
 }
 
 interface MediaPickerProps {
@@ -16,14 +19,28 @@ interface MediaPickerProps {
   onClose: () => void
   onSelect: (asset: MediaPickerAsset) => void
   title?: string
+  initialUsageType?: string
+  category?: string
 }
 
-export default function MediaPicker({ open, onClose, onSelect, title = 'Choose from Media Library' }: MediaPickerProps) {
+export default function MediaPicker({
+  open,
+  onClose,
+  onSelect,
+  title = 'Choose from Media Library',
+  initialUsageType = 'all',
+  category = '',
+}: MediaPickerProps) {
   const [assets, setAssets] = useState<MediaPickerAsset[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
-  const [usageType, setUsageType] = useState('all')
+  const [usageType, setUsageType] = useState(initialUsageType)
+
+  useEffect(() => {
+    if (!open) return
+    setUsageType(initialUsageType)
+  }, [initialUsageType, open])
 
   useEffect(() => {
     if (!open) return
@@ -33,7 +50,9 @@ export default function MediaPicker({ open, onClose, onSelect, title = 'Choose f
       try {
         setLoading(true)
         setError('')
-        const res = await fetch('/api/admin/media-assets?status=active', { method: 'GET' })
+        const params = new URLSearchParams({ status: 'active' })
+        if (category.trim()) params.set('category', category.trim())
+        const res = await fetch(`/api/admin/media-assets?${params.toString()}`, { method: 'GET' })
         const data = await res.json() as {
           ok?: boolean
           assets?: Array<{
@@ -42,9 +61,12 @@ export default function MediaPicker({ open, onClose, onSelect, title = 'Choose f
             thumbnailUrl: string | null
             title: string
             alt: string
+            description?: string
             filename: string | null
             usageType: string
             category: string
+            width?: number | null
+            height?: number | null
           }>
           error?: string
         }
@@ -62,7 +84,7 @@ export default function MediaPicker({ open, onClose, onSelect, title = 'Choose f
     }
     void load()
     return () => { active = false }
-  }, [open])
+  }, [category, open])
 
   const usageOptions = useMemo(() => {
     const set = new Set<string>()

@@ -82,6 +82,8 @@ export const defaultSiteContent: SiteContent = {
     },
   },
   portfolio: {
+    albumOrder: ['featured', 'mountains', 'sea_lakes', 'forest', 'nightscape', 'city'],
+    albumPhotoIds: {},
     albumDetails: {
       featured: {
         albumName: 'Featured Works',
