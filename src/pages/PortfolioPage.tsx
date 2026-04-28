@@ -231,52 +231,8 @@ export default function PortfolioPage() {
   const { siteContent } = useSiteContentContext()
   const { search } = useLocation()
   const navigate = useNavigate()
-  const [managedAssets, setManagedAssets] = useState<MediaAsset[]>([])
-  const [assetsLoaded, setAssetsLoaded] = useState(false)
-  const managedAssetIds = useMemo(() => {
-    const ids = Object.values(siteContent.portfolio?.albumPhotoIds ?? {}).flat()
-    return ids.filter((id, index, list) => !!id && list.indexOf(id) === index)
-  }, [siteContent.portfolio?.albumPhotoIds])
-  const managedAssetMap = useMemo(() => {
-    const map = new Map<string, MediaAsset>()
-    managedAssets.forEach((asset) => map.set(asset.id, asset))
-    return map
-  }, [managedAssets])
-
-  useEffect(() => {
-    if (managedAssetIds.length === 0) {
-      setManagedAssets([])
-      setAssetsLoaded(true)
-      return
-    }
-    let active = true
-    const load = async () => {
-      try {
-        setAssetsLoaded(false)
-        const res = await fetch('/api/admin/media-assets?status=active')
-        const data = await res.json() as { ok?: boolean; assets?: MediaAsset[] }
-        if (!res.ok || !data.ok || !Array.isArray(data.assets)) {
-          throw new Error('Failed to load managed album assets')
-        }
-        if (!active) return
-        setManagedAssets(data.assets.filter((asset) => managedAssetIds.includes(asset.id)))
-      } catch {
-        if (!active) return
-        setManagedAssets([])
-      } finally {
-        if (active) setAssetsLoaded(true)
-      }
-    }
-    void load()
-    return () => { active = false }
-  }, [managedAssetIds])
-
-
-
-  const albums = useMemo(
-    () => createAlbums(siteContent.photos, siteContent.portfolio, managedAssetMap),
-    [managedAssetMap, siteContent.photos, siteContent.portfolio],
-  )
+  const initialAlbumFromUrl = useMemo(() => new URLSearchParams(search).get('album')?.trim() ?? '', [search])
+  const albums = useMemo(() => createAlbums(siteContent.photos), [siteContent.photos])
 
   const [activeAlbumId, setActiveAlbumId] = useState(initialAlbumFromUrl || 'featured')
   const [carouselOrder, setCarouselOrder] = useState<Photo[]>([])
@@ -286,28 +242,6 @@ export default function PortfolioPage() {
 
   const activeAlbum = albums.find((album) => album.id === activeAlbumId) ?? albums[0] ?? null
   const queryAlbumId = initialAlbumFromUrl
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const syncPreference = () => setPrefersReducedMotion(mediaQuery.matches)
-    syncPreference()
-    mediaQuery.addEventListener('change', syncPreference)
-    return () => mediaQuery.removeEventListener('change', syncPreference)
-  }, [])
-
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      setStripIntroActive(false)
-      return
-    }
-
-    const timeout = window.setTimeout(() => {
-      setStripIntroActive(false)
-    }, 920)
-    return () => window.clearTimeout(timeout)
-  }, [prefersReducedMotion])
 
   useEffect(() => {
     if (albums.length === 0) return
