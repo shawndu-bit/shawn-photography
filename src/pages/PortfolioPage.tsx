@@ -231,6 +231,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(-420px,-30vw,-360px), 0, -90px) rotateY(24deg) scaleX(0.88) scale(0.9)',
       opacity: 1,
       zIndex: 25,
+      filter: 'brightness(0.75) saturate(0.9)',
     }
   }
 
@@ -241,6 +242,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(360px,30vw,420px), 0, -90px) rotateY(-24deg) scaleX(0.88) scale(0.9)',
       opacity: 1,
       zIndex: 25,
+      filter: 'brightness(0.75) saturate(0.9)',
     }
   }
 
@@ -251,6 +253,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(-700px,-48vw,-600px), 0, -180px) rotateY(34deg) scaleX(0.82) scale(0.76)',
       opacity: 0.82,
       zIndex: 15,
+      filter: 'brightness(0.60) saturate(0.85)',
     }
   }
 
@@ -260,6 +263,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
     transform: 'translate(-50%, -50%) translate3d(clamp(600px,48vw,700px), 0, -180px) rotateY(-34deg) scaleX(0.82) scale(0.76)',
     opacity: 0.82,
     zIndex: 15,
+    filter: 'brightness(0.60) saturate(0.85)',
   }
 }
 
@@ -277,8 +281,12 @@ function getReflectionStyle(slot: Slot): React.CSSProperties {
     outline: DEBUG_REFLECTIONS ? '2px solid rgba(255,0,0,0.9)' : undefined,
     background: 'transparent',
     overflow: 'hidden',
-    maskImage: 'none',
-    WebkitMaskImage: 'none',
+    maskImage: DEBUG_REFLECTIONS
+      ? 'none'
+      : 'linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.42) 42%, rgba(0,0,0,0.16) 72%, transparent 100%)',
+    WebkitMaskImage: DEBUG_REFLECTIONS
+      ? 'none'
+      : 'linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.42) 42%, rgba(0,0,0,0.16) 72%, transparent 100%)',
   }
 }
 
@@ -286,10 +294,18 @@ function getReflectionImageStyle(slot: Slot, src: string): React.CSSProperties {
   const opacity = DEBUG_REFLECTIONS
     ? 1
     : slot === 'center'
-      ? 0.36
+      ? 0.42
       : slot === 'left' || slot === 'right'
-        ? 0.30
-        : 0.22
+        ? 0.26
+        : 0.16
+
+  const filter = DEBUG_REFLECTIONS
+    ? 'none'
+    : slot === 'center'
+      ? 'blur(0.2px) brightness(0.96) saturate(0.98)'
+      : slot === 'left' || slot === 'right'
+        ? 'blur(0.3px) brightness(0.78) saturate(0.88)'
+        : 'blur(0.35px) brightness(0.64) saturate(0.82)'
 
   return {
     backgroundImage: `url(${src})`,
@@ -298,7 +314,7 @@ function getReflectionImageStyle(slot: Slot, src: string): React.CSSProperties {
     transform: 'scaleY(-1)',
     transformOrigin: 'center center',
     opacity,
-    filter: DEBUG_REFLECTIONS ? 'none' : 'blur(0.25px) brightness(0.88) saturate(0.95)',
+    filter,
     zIndex: 1,
   }
 }
@@ -311,10 +327,10 @@ function getReflectionOverlayStyle(slot: Slot): React.CSSProperties {
   }
 
   const background = slot === 'center'
-    ? 'linear-gradient(to bottom, rgba(10,10,10,0.02) 0%, rgba(10,10,10,0.14) 34%, rgba(10,10,10,0.46) 72%, rgba(10,10,10,0.82) 100%)'
+    ? 'linear-gradient(to bottom, rgba(10,10,10,0.00) 0%, rgba(10,10,10,0.10) 36%, rgba(10,10,10,0.34) 68%, rgba(10,10,10,0.58) 100%)'
     : slot === 'left' || slot === 'right'
-      ? 'linear-gradient(to bottom, rgba(10,10,10,0.04) 0%, rgba(10,10,10,0.18) 36%, rgba(10,10,10,0.52) 74%, rgba(10,10,10,0.86) 100%)'
-      : 'linear-gradient(to bottom, rgba(10,10,10,0.08) 0%, rgba(10,10,10,0.24) 38%, rgba(10,10,10,0.60) 76%, rgba(10,10,10,0.90) 100%)'
+      ? 'linear-gradient(to bottom, rgba(10,10,10,0.04) 0%, rgba(10,10,10,0.18) 38%, rgba(10,10,10,0.44) 70%, rgba(10,10,10,0.68) 100%)'
+      : 'linear-gradient(to bottom, rgba(10,10,10,0.10) 0%, rgba(10,10,10,0.28) 40%, rgba(10,10,10,0.56) 74%, rgba(10,10,10,0.78) 100%)'
 
   return {
     background,
