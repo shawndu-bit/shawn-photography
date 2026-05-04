@@ -39,7 +39,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const TRANSITION_MS = 860
 const STAGE_INTRO_MS = 1400
 const DEBUG_REFLECTIONS = false
-const DEBUG_PERSPECTIVE = true
+const DEBUG_PERSPECTIVE = false
 
 // Diagnostic transform presets (do not apply permanently until investigation is complete).
 // A) Current-style rotateY approach
@@ -220,7 +220,6 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(0, -38px, 130px) rotateY(0deg) scale(0.94)',
       opacity: 1,
       zIndex: 40,
-      filter: 'brightness(1)',
     }
   }
 
@@ -267,6 +266,19 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
   }
 }
 
+
+function getPanelVisualFilter(slot: Slot, hoveredPanelSlot: Slot | null): string {
+  if (slot === 'center') return 'brightness(1) saturate(1)'
+
+  if (slot === 'left' || slot === 'right') {
+    return hoveredPanelSlot === slot
+      ? 'brightness(1) saturate(1)'
+      : 'brightness(0.75) saturate(0.9)'
+  }
+
+  return 'brightness(0.60) saturate(0.85)'
+}
+
 function getReflectionStyle(slot: Slot): React.CSSProperties {
   const height = slot === 'center'
     ? '120px'
@@ -290,13 +302,15 @@ function getReflectionStyle(slot: Slot): React.CSSProperties {
   }
 }
 
-function getReflectionImageStyle(slot: Slot, src: string): React.CSSProperties {
+function getReflectionImageStyle(slot: Slot, src: string, hoveredPanelSlot?: Slot | null): React.CSSProperties {
+  const isHoveredSide = hoveredPanelSlot === slot && (slot === 'left' || slot === 'right')
+
   const opacity = DEBUG_REFLECTIONS
     ? 1
     : slot === 'center'
       ? 0.42
       : slot === 'left' || slot === 'right'
-        ? 0.26
+        ? isHoveredSide ? 0.32 : 0.26
         : 0.16
 
   const filter = DEBUG_REFLECTIONS
@@ -304,7 +318,9 @@ function getReflectionImageStyle(slot: Slot, src: string): React.CSSProperties {
     : slot === 'center'
       ? 'blur(0.2px) brightness(0.96) saturate(0.98)'
       : slot === 'left' || slot === 'right'
-        ? 'blur(0.3px) brightness(0.78) saturate(0.88)'
+        ? isHoveredSide
+          ? 'blur(0.25px) brightness(0.9) saturate(0.96)'
+          : 'blur(0.3px) brightness(0.78) saturate(0.88)'
         : 'blur(0.35px) brightness(0.64) saturate(0.82)'
 
   return {
@@ -316,6 +332,7 @@ function getReflectionImageStyle(slot: Slot, src: string): React.CSSProperties {
     opacity,
     filter,
     zIndex: 1,
+    transition: `opacity ${TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), filter ${TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
   }
 }
 
@@ -403,6 +420,7 @@ export default function PortfolioPage() {
   const [stripIntroActive, setStripIntroActive] = useState(true)
   const [stageIntroActive, setStageIntroActive] = useState(true)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [hoveredPanelSlot, setHoveredPanelSlot] = useState<Slot | null>(null)
   const skipNextAlbumChangeIntroRef = useRef(false)
 
   const activeAlbum = albums.find((album) => album.id === activeAlbumId) ?? albums[0] ?? null
@@ -565,12 +583,6 @@ export default function PortfolioPage() {
       <SiteHeader mode="inner" />
 
       <main className="relative isolate overflow-hidden bg-carbon pt-28 lg:pt-32">
-        <div
-          data-portfolio-debug="PortfolioPage-active"
-          className="fixed bottom-4 left-4 z-[9999] rounded bg-red-600 px-3 py-2 text-xs text-white"
-        >
-          PortfolioPage debug active
-        </div>
         {displayPhoto && (
           <>
             <div className="pointer-events-none absolute inset-0 -z-20 bg-cover bg-center opacity-20 blur-3xl" style={{ backgroundImage: `url(${displayPhoto.thumbnailSrc || displayPhoto.src})` }} />
@@ -615,7 +627,22 @@ export default function PortfolioPage() {
                         }}
                         disabled={isAnimating && slot !== 'center'}
                         className={`group aspect-[3/2] appearance-none overflow-visible border-0 bg-transparent p-0 transition-[filter,box-shadow] duration-500 ${slot === 'center' ? 'cursor-zoom-in shadow-[0_22px_70px_rgba(0,0,0,0.55),0_0_36px_rgba(255,255,255,0.05)]' : slot === 'left' || slot === 'right' ? 'cursor-pointer shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_24px_rgba(255,255,255,0.04)]' : 'pointer-events-none shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_24px_rgba(255,255,255,0.04)]'}`}
-                        style={getPanelStyle(slot)}
+                        onMouseEnter={() => {
+                          if (slot === 'left' || slot === 'right') setHoveredPanelSlot(slot)
+                        }}
+                        onMouseLeave={() => {
+                          if (slot === 'left' || slot === 'right') setHoveredPanelSlot(null)
+                        }}
+                        onFocus={() => {
+                          if (slot === 'left' || slot === 'right') setHoveredPanelSlot(slot)
+                        }}
+                        onBlur={() => {
+                          if (slot === 'left' || slot === 'right') setHoveredPanelSlot(null)
+                        }}
+                        style={{
+                          ...getPanelStyle(slot),
+                          filter: getPanelVisualFilter(slot, hoveredPanelSlot),
+                        }}
                         aria-label={slot === 'center' ? 'Open image in lightbox' : `View ${displayPhoto?.title || photo.title}`}
                       >
                         <div className="relative h-full w-full overflow-visible">
@@ -645,7 +672,7 @@ export default function PortfolioPage() {
                           >
                             <div
                               className="absolute inset-0"
-                              style={getReflectionImageStyle(slot, photo.src)}
+                              style={getReflectionImageStyle(slot, photo.src, hoveredPanelSlot)}
                             />
                             <div
                               className="absolute inset-0"
