@@ -38,6 +38,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const TRANSITION_MS = 860
 const STAGE_INTRO_MS = 1400
+const DEBUG_REFLECTIONS = true
 
 function getAlbumName(category: string) {
   return CATEGORY_LABELS[category] ?? category.replace(/_/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase())
@@ -223,13 +224,30 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
 }
 
 function getReflectionStyle(slot: Slot): React.CSSProperties {
-  const opacity = slot === 'center' ? 0.35 : slot === 'left' || slot === 'right' ? 0.28 : 0.22
-  const height = slot === 'center' ? '25%' : slot === 'left' || slot === 'right' ? '66%' : '100%'
+  const height = slot === 'center'
+    ? '120px'
+    : slot === 'left' || slot === 'right'
+      ? '180px'
+      : '220px'
+
+  const finalOpacity = slot === 'center'
+    ? 0.26
+    : slot === 'left' || slot === 'right'
+      ? 0.2
+      : 0.14
+
   return {
     height,
-    opacity,
-    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.35), transparent)',
-    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.35), transparent)',
+    opacity: DEBUG_REFLECTIONS ? 0.75 : finalOpacity,
+    transform: 'translateY(2px)',
+    outline: DEBUG_REFLECTIONS ? '2px solid rgba(255,0,0,0.9)' : undefined,
+    background: DEBUG_REFLECTIONS ? 'rgba(255,0,0,0.22)' : undefined,
+    maskImage: DEBUG_REFLECTIONS
+      ? 'none'
+      : 'linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.32) 42%, transparent 100%)',
+    WebkitMaskImage: DEBUG_REFLECTIONS
+      ? 'none'
+      : 'linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.32) 42%, transparent 100%)',
   }
 }
 
@@ -460,6 +478,12 @@ export default function PortfolioPage() {
       <SiteHeader mode="inner" />
 
       <main className="relative isolate overflow-hidden bg-carbon pt-28 lg:pt-32">
+        <div
+          data-portfolio-debug="PortfolioPage-active"
+          className="fixed bottom-4 left-4 z-[9999] rounded bg-red-600 px-3 py-2 text-xs text-white"
+        >
+          PortfolioPage debug active
+        </div>
         {displayPhoto && (
           <>
             <div className="pointer-events-none absolute inset-0 -z-20 bg-cover bg-center opacity-20 blur-3xl" style={{ backgroundImage: `url(${displayPhoto.thumbnailSrc || displayPhoto.src})` }} />
@@ -493,6 +517,7 @@ export default function PortfolioPage() {
                     {panels.map(({ photo, slot }) => (
                       <button
                         key={photo.id}
+                        data-carousel-panel={slot}
                         type="button"
                         onClick={() => {
                           if (slot === 'center' && !isAnimating) setLightboxOpen(true)
@@ -500,13 +525,13 @@ export default function PortfolioPage() {
                           if (slot === 'right') goNext()
                         }}
                         disabled={isAnimating && slot !== 'center'}
-                        className={`group aspect-[3/2] overflow-visible transition-[filter,box-shadow] duration-500 ${slot === 'center' ? 'cursor-zoom-in shadow-[0_22px_70px_rgba(0,0,0,0.55),0_0_36px_rgba(255,255,255,0.05)]' : slot === 'left' || slot === 'right' ? 'cursor-pointer shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_24px_rgba(255,255,255,0.04)]' : 'pointer-events-none shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_24px_rgba(255,255,255,0.04)]'}`}
+                        className={`group aspect-[3/2] appearance-none overflow-visible border-0 bg-transparent p-0 transition-[filter,box-shadow] duration-500 ${slot === 'center' ? 'cursor-zoom-in shadow-[0_22px_70px_rgba(0,0,0,0.55),0_0_36px_rgba(255,255,255,0.05)]' : slot === 'left' || slot === 'right' ? 'cursor-pointer shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_24px_rgba(255,255,255,0.04)]' : 'pointer-events-none shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_24px_rgba(255,255,255,0.04)]'}`}
                         style={getPanelStyle(slot)}
                         aria-label={slot === 'center' ? 'Open image in lightbox' : `View ${displayPhoto?.title || photo.title}`}
                       >
                         <div className="relative h-full w-full overflow-visible">
-                          <div className="relative h-full w-full overflow-hidden">
-                          <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
+                          <div className="relative h-full w-full overflow-hidden bg-transparent">
+                          <img src={photo.src} alt={photo.alt} className="block h-full w-full scale-[1.002] object-cover" />
                           {slot === 'center' && (
                             <>
                               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/72 to-transparent" />
@@ -519,13 +544,16 @@ export default function PortfolioPage() {
                           )}
                           </div>
                           <div
-                            className="pointer-events-none absolute inset-x-0 top-full overflow-hidden"
+                            data-carousel-reflection={slot}
+                            className="portfolio-reflection pointer-events-none absolute left-0 right-0 top-full z-[1] overflow-hidden"
                             style={getReflectionStyle(slot)}
                             aria-hidden="true"
                           >
-                            <div className="absolute inset-x-0 bottom-0 aspect-[3/2] w-full origin-bottom scale-y-[-1] overflow-hidden">
-                              <img src={photo.src} alt="" className="w-full object-cover" />
-                            </div>
+                            <img
+                              src={photo.src}
+                              alt=""
+                              className="block h-full w-full origin-top scale-y-[-1] object-cover"
+                            />
                           </div>
                         </div>
                       </button>
