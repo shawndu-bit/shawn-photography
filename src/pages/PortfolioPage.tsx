@@ -166,6 +166,8 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
     left: '50%',
     top: '50%',
     transformOrigin: 'center center',
+    transformStyle: 'preserve-3d',
+    backfaceVisibility: 'hidden',
     transition: `transform ${TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), filter ${TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
     willChange: 'transform, opacity, filter',
   }
@@ -174,7 +176,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
     return {
       ...base,
       width: 'min(800px, 56vw)',
-      transform: 'translate(-50%, -50%) translate3d(0, -28px, 120px) rotateY(0deg) scale(0.94)',
+      transform: 'translate(-50%, -50%) translate3d(0, -38px, 130px) rotateY(0deg) scale(0.94)',
       opacity: 1,
       zIndex: 40,
       filter: 'brightness(1)',
@@ -185,7 +187,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
     return {
       ...base,
       width: 'min(500px, 35vw)',
-      transform: 'translate(-50%, -50%) translate3d(clamp(-420px,-30vw,-360px), 0, -90px) rotateY(12deg) scaleX(0.9) scale(0.9)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(-420px,-30vw,-360px), 0, -90px) rotateY(24deg) scaleX(0.88) scale(0.9)',
       opacity: 1,
       zIndex: 25,
     }
@@ -195,7 +197,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
     return {
       ...base,
       width: 'min(500px, 35vw)',
-      transform: 'translate(-50%, -50%) translate3d(clamp(360px,30vw,420px), 0, -90px) rotateY(-12deg) scaleX(0.9) scale(0.9)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(360px,30vw,420px), 0, -90px) rotateY(-24deg) scaleX(0.88) scale(0.9)',
       opacity: 1,
       zIndex: 25,
     }
@@ -205,7 +207,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
     return {
       ...base,
       width: 'min(360px, 27vw)',
-      transform: 'translate(-50%, -50%) translate3d(clamp(-700px,-48vw,-600px), 0, -180px) rotateY(18deg) scaleX(0.84) scale(0.78)',
+      transform: 'translate(-50%, -50%) translate3d(clamp(-700px,-48vw,-600px), 0, -180px) rotateY(34deg) scaleX(0.82) scale(0.76)',
       opacity: 0.82,
       zIndex: 15,
     }
@@ -214,9 +216,20 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
   return {
     ...base,
     width: 'min(360px, 27vw)',
-    transform: 'translate(-50%, -50%) translate3d(clamp(600px,48vw,700px), 0, -180px) rotateY(-18deg) scaleX(0.84) scale(0.78)',
+    transform: 'translate(-50%, -50%) translate3d(clamp(600px,48vw,700px), 0, -180px) rotateY(-34deg) scaleX(0.82) scale(0.76)',
     opacity: 0.82,
     zIndex: 15,
+  }
+}
+
+function getReflectionStyle(slot: Slot): React.CSSProperties {
+  const opacity = slot === 'center' ? 0.35 : slot === 'left' || slot === 'right' ? 0.28 : 0.22
+  const height = slot === 'center' ? '25%' : slot === 'left' || slot === 'right' ? '66%' : '100%'
+  return {
+    height,
+    opacity,
+    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.35), transparent)',
+    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.35), transparent)',
   }
 }
 
@@ -468,7 +481,7 @@ export default function PortfolioPage() {
               )}
               {currentPhoto ? (
                 <>
-                  <div className="relative hidden h-[clamp(380px,52vh,660px)] w-full overflow-visible lg:block" style={{ perspective: '1300px', perspectiveOrigin: '50% 45%' }}>
+                  <div className="relative hidden h-[clamp(430px,54vh,640px)] w-full overflow-visible lg:block" style={{ perspective: '1150px', perspectiveOrigin: '50% 42%' }}>
                     <div
                       className="relative h-full w-full overflow-visible"
                       style={{
@@ -507,19 +520,12 @@ export default function PortfolioPage() {
                           </div>
                           <div
                             className="pointer-events-none absolute inset-x-0 top-full overflow-hidden"
-                            style={{
-                              height: slot === 'center' ? '25%' : slot === 'left' || slot === 'right' ? '66%' : '100%',
-                              opacity: slot === 'center' ? 0.25 : slot === 'left' || slot === 'right' ? 0.2 : 0.15,
-                              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.85), transparent)',
-                              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.85), transparent)',
-                            }}
+                            style={getReflectionStyle(slot)}
+                            aria-hidden="true"
                           >
-                            <img
-                              src={photo.src}
-                              alt=""
-                              aria-hidden="true"
-                              className="h-full w-full origin-top scale-y-[-1] object-cover"
-                            />
+                            <div className="absolute inset-x-0 bottom-0 aspect-[3/2] w-full origin-bottom scale-y-[-1] overflow-hidden">
+                              <img src={photo.src} alt="" className="w-full object-cover" />
+                            </div>
                           </div>
                         </div>
                       </button>
@@ -541,7 +547,7 @@ export default function PortfolioPage() {
               )}
             </div>
 
-            <div className="relative left-1/2 mt-20 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pt-3 pb-4 lg:mt-24">
+            <div className="relative left-1/2 mt-8 w-screen -translate-x-1/2 overflow-x-auto px-[clamp(24px,5.5vw,96px)] pt-3 pb-4 lg:mt-10">
               <div
                 className="flex min-w-max items-stretch gap-3 pr-3"
                 style={{
