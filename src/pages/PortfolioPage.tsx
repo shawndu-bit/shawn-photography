@@ -38,7 +38,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const TRANSITION_MS = 860
 const STAGE_INTRO_MS = 1400
-const DEBUG_REFLECTIONS = true
+const DEBUG_REFLECTIONS = false
 
 function getAlbumName(category: string) {
   return CATEGORY_LABELS[category] ?? category.replace(/_/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase())
@@ -232,9 +232,53 @@ function getReflectionStyle(slot: Slot): React.CSSProperties {
 
   return {
     height,
-    transform: 'translateY(2px)',
+    opacity: 1,
+    transform: 'translateY(3px)',
     outline: DEBUG_REFLECTIONS ? '2px solid rgba(255,0,0,0.9)' : undefined,
+    background: 'transparent',
     overflow: 'hidden',
+    maskImage: 'none',
+    WebkitMaskImage: 'none',
+  }
+}
+
+function getReflectionImageStyle(slot: Slot, src: string): React.CSSProperties {
+  const opacity = DEBUG_REFLECTIONS
+    ? 1
+    : slot === 'center'
+      ? 0.24
+      : slot === 'left' || slot === 'right'
+        ? 0.18
+        : 0.12
+
+  return {
+    backgroundImage: `url(${src})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center bottom',
+    transform: 'scaleY(-1)',
+    transformOrigin: 'center center',
+    opacity,
+    filter: DEBUG_REFLECTIONS ? 'none' : 'blur(0.35px) brightness(0.66) saturate(0.88)',
+    zIndex: 1,
+  }
+}
+
+function getReflectionOverlayStyle(slot: Slot): React.CSSProperties {
+  if (DEBUG_REFLECTIONS) {
+    return {
+      display: 'none',
+    }
+  }
+
+  const background = slot === 'center'
+    ? 'linear-gradient(to bottom, rgba(10,10,10,0.10) 0%, rgba(10,10,10,0.34) 38%, rgba(10,10,10,0.78) 100%)'
+    : slot === 'left' || slot === 'right'
+      ? 'linear-gradient(to bottom, rgba(10,10,10,0.12) 0%, rgba(10,10,10,0.40) 42%, rgba(10,10,10,0.82) 100%)'
+      : 'linear-gradient(to bottom, rgba(10,10,10,0.18) 0%, rgba(10,10,10,0.48) 42%, rgba(10,10,10,0.88) 100%)'
+
+  return {
+    background,
+    zIndex: 2,
   }
 }
 
@@ -536,34 +580,13 @@ export default function PortfolioPage() {
                             style={getReflectionStyle(slot)}
                             aria-hidden="true"
                           >
-                            <img
-                              src={photo.src}
-                              alt=""
-                              className="absolute inset-0 block h-full w-full object-cover"
-                              style={{
-                                transform: 'scaleY(-1)',
-                                transformOrigin: 'top center',
-                                objectPosition: 'center top',
-                                opacity: DEBUG_REFLECTIONS
-                                  ? 1
-                                  : slot === 'center'
-                                    ? 0.24
-                                    : slot === 'left' || slot === 'right'
-                                      ? 0.18
-                                      : 0.12,
-                                filter: DEBUG_REFLECTIONS
-                                  ? 'none'
-                                  : 'blur(0.25px) brightness(0.72) saturate(0.9)',
-                              }}
-                            />
-
                             <div
                               className="absolute inset-0"
-                              style={{
-                                background: DEBUG_REFLECTIONS
-                                  ? 'linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.15))'
-                                  : 'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.28) 35%, rgba(0,0,0,0.72) 100%)',
-                              }}
+                              style={getReflectionImageStyle(slot, photo.src)}
+                            />
+                            <div
+                              className="absolute inset-0"
+                              style={getReflectionOverlayStyle(slot)}
                             />
                           </div>
                         </div>
