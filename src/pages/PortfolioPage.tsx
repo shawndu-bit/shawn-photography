@@ -460,6 +460,12 @@ export default function PortfolioPage() {
       <SiteHeader mode="inner" />
 
       <main className="relative isolate overflow-hidden bg-carbon pt-28 lg:pt-32">
+        <div
+          data-portfolio-debug="PortfolioPage-active"
+          className="fixed bottom-4 left-4 z-[9999] rounded bg-red-600 px-3 py-2 text-xs text-white"
+        >
+          PortfolioPage debug active
+        </div>
         {displayPhoto && (
           <>
             <div className="pointer-events-none absolute inset-0 -z-20 bg-cover bg-center opacity-20 blur-3xl" style={{ backgroundImage: `url(${displayPhoto.thumbnailSrc || displayPhoto.src})` }} />
@@ -493,6 +499,7 @@ export default function PortfolioPage() {
                     {panels.map(({ photo, slot }) => (
                       <button
                         key={photo.id}
+                        data-carousel-panel={slot}
                         type="button"
                         onClick={() => {
                           if (slot === 'center' && !isAnimating) setLightboxOpen(true)
