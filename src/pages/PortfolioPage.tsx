@@ -39,6 +39,46 @@ const CATEGORY_LABELS: Record<string, string> = {
 const TRANSITION_MS = 860
 const STAGE_INTRO_MS = 1400
 const DEBUG_REFLECTIONS = false
+const DEBUG_PERSPECTIVE = true
+
+// Diagnostic transform presets (do not apply permanently until investigation is complete).
+// A) Current-style rotateY approach
+// left/right: rotateY(24deg) scaleX(0.88)
+// farLeft/farRight: rotateY(34deg) scaleX(0.82)
+// B) Strong diagnostic rotateY approach
+// left/right: rotateY(40deg) scaleX(0.82)
+// farLeft/farRight: rotateY(52deg) scaleX(0.72)
+
+// Browser verification snippet:
+// const panels = [...document.querySelectorAll('[data-carousel-panel]')];
+// console.table(
+//   panels.map((el, index) => {
+//     const s = getComputedStyle(el);
+//     const parent = el.parentElement;
+//     const ps = parent ? getComputedStyle(parent) : null;
+//
+//     return {
+//       index,
+//       slot: el.getAttribute('data-carousel-panel'),
+//       width: s.width,
+//       height: s.height,
+//       transform: s.transform,
+//       transformType: s.transform.includes('matrix3d')
+//         ? 'matrix3d'
+//         : s.transform === 'none'
+//           ? 'none'
+//           : 'matrix/flat',
+//       transformOrigin: s.transformOrigin,
+//       transformStyle: s.transformStyle,
+//       perspective: s.perspective,
+//       parentTransform: ps?.transform || 'none',
+//       parentTransformStyle: ps?.transformStyle || 'none',
+//       parentPerspective: ps?.perspective || 'none',
+//       overflow: s.overflow,
+//       zIndex: s.zIndex,
+//     };
+//   })
+// );
 
 function getAlbumName(category: string) {
   return CATEGORY_LABELS[category] ?? category.replace(/_/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase())
@@ -536,10 +576,11 @@ export default function PortfolioPage() {
               )}
               {currentPhoto ? (
                 <>
-                  <div className="relative hidden h-[clamp(430px,54vh,640px)] w-full overflow-visible lg:block" style={{ perspective: '1150px', perspectiveOrigin: '50% 42%' }}>
+                  <div className="relative hidden h-[clamp(430px,54vh,640px)] w-full overflow-visible lg:block" style={{ perspective: '1150px', perspectiveOrigin: '50% 42%', transformStyle: 'preserve-3d' }}>
                     <div
                       className="relative h-full w-full overflow-visible"
                       style={{
+                        transformStyle: 'preserve-3d',
                         animation: !prefersReducedMotion && stageIntroActive
                           ? 'portfolioStageIntro 1200ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both'
                           : undefined,
@@ -549,6 +590,7 @@ export default function PortfolioPage() {
                       <button
                         key={photo.id}
                         data-carousel-panel={slot}
+                        data-carousel-slot={slot}
                         type="button"
                         onClick={() => {
                           if (slot === 'center' && !isAnimating) setLightboxOpen(true)
@@ -561,6 +603,11 @@ export default function PortfolioPage() {
                         aria-label={slot === 'center' ? 'Open image in lightbox' : `View ${displayPhoto?.title || photo.title}`}
                       >
                         <div className="relative h-full w-full overflow-visible">
+                          {DEBUG_PERSPECTIVE && (
+                            <span className="pointer-events-none absolute left-2 top-2 z-[999] rounded bg-black/70 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white">
+                              {slot}
+                            </span>
+                          )}
                           <div className="relative h-full w-full overflow-hidden bg-transparent">
                           <img src={photo.src} alt={photo.alt} className="block h-full w-full scale-[1.002] object-cover" />
                           {slot === 'center' && (
