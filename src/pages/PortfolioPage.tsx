@@ -230,24 +230,11 @@ function getReflectionStyle(slot: Slot): React.CSSProperties {
       ? '180px'
       : '220px'
 
-  const finalOpacity = slot === 'center'
-    ? 0.26
-    : slot === 'left' || slot === 'right'
-      ? 0.2
-      : 0.14
-
   return {
     height,
-    opacity: DEBUG_REFLECTIONS ? 0.75 : finalOpacity,
     transform: 'translateY(2px)',
     outline: DEBUG_REFLECTIONS ? '2px solid rgba(255,0,0,0.9)' : undefined,
-    background: DEBUG_REFLECTIONS ? 'rgba(255,0,0,0.22)' : undefined,
-    maskImage: DEBUG_REFLECTIONS
-      ? 'none'
-      : 'linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.32) 42%, transparent 100%)',
-    WebkitMaskImage: DEBUG_REFLECTIONS
-      ? 'none'
-      : 'linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.32) 42%, transparent 100%)',
+    overflow: 'hidden',
   }
 }
 
@@ -552,7 +539,31 @@ export default function PortfolioPage() {
                             <img
                               src={photo.src}
                               alt=""
-                              className="block h-full w-full origin-top scale-y-[-1] object-cover"
+                              className="absolute inset-0 block h-full w-full object-cover"
+                              style={{
+                                transform: 'scaleY(-1)',
+                                transformOrigin: 'top center',
+                                objectPosition: 'center top',
+                                opacity: DEBUG_REFLECTIONS
+                                  ? 1
+                                  : slot === 'center'
+                                    ? 0.24
+                                    : slot === 'left' || slot === 'right'
+                                      ? 0.18
+                                      : 0.12,
+                                filter: DEBUG_REFLECTIONS
+                                  ? 'none'
+                                  : 'blur(0.25px) brightness(0.72) saturate(0.9)',
+                              }}
+                            />
+
+                            <div
+                              className="absolute inset-0"
+                              style={{
+                                background: DEBUG_REFLECTIONS
+                                  ? 'linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.15))'
+                                  : 'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.28) 35%, rgba(0,0,0,0.72) 100%)',
+                              }}
                             />
                           </div>
                         </div>
