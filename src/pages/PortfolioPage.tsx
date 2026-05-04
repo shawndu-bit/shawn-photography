@@ -230,6 +230,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(-420px,-30vw,-360px), 0, -90px) rotateY(24deg) scaleX(0.88) scale(0.9)',
       opacity: 1,
       zIndex: 25,
+      filter: 'brightness(0.75) saturate(0.9)',
     }
   }
 
@@ -240,6 +241,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(360px,30vw,420px), 0, -90px) rotateY(-24deg) scaleX(0.88) scale(0.9)',
       opacity: 1,
       zIndex: 25,
+      filter: 'brightness(0.75) saturate(0.9)',
     }
   }
 
@@ -250,6 +252,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
       transform: 'translate(-50%, -50%) translate3d(clamp(-700px,-48vw,-600px), 0, -180px) rotateY(34deg) scaleX(0.82) scale(0.76)',
       opacity: 0.82,
       zIndex: 15,
+      filter: 'brightness(0.60) saturate(0.85)',
     }
   }
 
@@ -259,6 +262,7 @@ function getPanelStyle(slot: Slot): React.CSSProperties {
     transform: 'translate(-50%, -50%) translate3d(clamp(600px,48vw,700px), 0, -180px) rotateY(-34deg) scaleX(0.82) scale(0.76)',
     opacity: 0.82,
     zIndex: 15,
+    filter: 'brightness(0.60) saturate(0.85)',
   }
 }
 
