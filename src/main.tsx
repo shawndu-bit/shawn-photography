@@ -10,6 +10,8 @@ import AboutPage from './pages/AboutPage';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 import PortfolioPage from './pages/PortfolioPage';
+import GalleryPage from './pages/GalleryPage';
+import GalleryAlbumPage from './pages/GalleryAlbumPage';
 import LoginPage from './admin/pages/LoginPage';
 import DashboardPage from './admin/pages/DashboardPage';
 import HeroEditPage from './admin/pages/HeroEditPage';
@@ -47,6 +49,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/blog/:slug" element={<BlogPostPage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
+          <Route path="/gallery" element={<GalleryPage />} />
+          <Route path="/gallery/:albumSlug" element={<GalleryAlbumPage />} />
 
           <Route path="/admin/login" element={<LoginPage />} />
           <Route path="/admin" element={<DashboardPage />} />
